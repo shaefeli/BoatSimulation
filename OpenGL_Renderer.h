@@ -1,11 +1,28 @@
 #include <GL/glew.h>
 #include <GL/glut.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
 #include <cstddef>
+
 
 class OpenGL_Renderer
 {
     private:
+    GLFWwindow* window; // this variable is global for simplicity)
+    GLuint VertexArrayID;
+	GLuint vertexbuffer;
+    GLuint programID;
+
+    GLuint boxVAO;
+    GLuint box_pointsVBO, box_edgesVBO;
+
+	GLuint MatrixID;//uniform
+	glm::mat4 Projection;
+	glm::mat4 View;
+	glm::mat4 Model;
+	glm::mat4 MVP;
+
     public:
  
         typedef struct {
