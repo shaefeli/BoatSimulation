@@ -1,4 +1,6 @@
-#include <glew.h>
+#include <GL/glew.h>
+#include <GL/glut.h>
+#include <GLFW/glfw3.h>
 #include <cstddef>
 
 class OpenGL_Renderer
@@ -15,7 +17,7 @@ class OpenGL_Renderer
        
         rendering_info_t render_info;
 
-        void init( int argc, char** argv);
+        bool init( int argc, char** argv);
         void draw();
 
         void draw_box();
