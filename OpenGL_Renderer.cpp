@@ -162,22 +162,18 @@ bool OpenGL_Renderer::init( int argc, char** argv)
         0,1,2,
 	};
     
-    glGenVertexArrays(1, &box_VAO);
-    glBindVertexArray(box_VAO);
-    glEnableVertexAttribArray(0);
+    GLuint box_VAO;
+	glGenVertexArrays(1, &box_VAO);
+	glBindVertexArray(box_VAO);
 
+    
+	GLuint box_points_VBO;
+	glGenBuffers(1, &box_points_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &box_points_VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
-    glBufferData(GL_ARRAY_BUFFER,sizeof(GLfloat)*9, g_vertex_buffer_data, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    
 
-
-    glGenBuffers(1, &box_indices_VBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, box_indices_VBO);
-    glBufferData(box_indices_VBO, sizeof(GLuint)*3, g_vertex_buffer_indices, GL_STATIC_DRAW);
-
-    glBindVertexArray(0);
 }
 
 
@@ -186,7 +182,7 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 void OpenGL_Renderer::draw()
 {
 
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    glClear( GL_COLOR_BUFFER_BIT );
 
     //draw_particles(render_info.n_particles, render_info.x, render_info.y, render_info.z);
     printf("draw\n");
@@ -199,17 +195,33 @@ void OpenGL_Renderer::draw()
 void OpenGL_Renderer::draw_box()
 {
 
-    glUseProgram(programID);
+    
+		// Clear the screen
+		glClear( GL_COLOR_BUFFER_BIT );
 
-	// Use our shader
-	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+		// Use our shader
+		glUseProgram(programID);
 
-    glBindVertexArray(box_VAO);
+		// Send our transformation to the currently bound shader, 
+		// in the "MVP" uniform
+		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-    glDrawElements(GL_TRIANGLES, 1, GL_UNSIGNED_INT, (GLvoid*) 0); 
-    //glDrawArrays(GL_TRIANGLES,0,3);
-    glBindVertexArray(0);
+		// 1rst attribute buffer : vertices
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
+		glVertexAttribPointer(
+			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+			3,                  // size
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			0,                  // stride
+			(void*)0            // array buffer offset
+		);
 
+		// Draw the triangle !
+		glDrawArrays(GL_TRIANGLES, 0, 3); // 3 indices starting at 0 -> 1 triangle
+
+		glDisableVertexAttribArray(0);
 
    
 	glfwSwapBuffers(window);
