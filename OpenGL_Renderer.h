@@ -14,8 +14,8 @@ class OpenGL_Renderer
 	GLuint vertexbuffer;
     GLuint programID;
 
-    GLuint boxVAO;
-    GLuint box_pointsVBO, box_edgesVBO;
+    GLuint box_VAO;
+    GLuint box_points_VBO, box_indices_VBO;
 
 	GLuint MatrixID;//uniform
 	glm::mat4 Projection;

@@ -136,104 +136,48 @@ bool OpenGL_Renderer::init( int argc, char** argv)
         return false;
     }
 
-    // Dark blue background
-    //glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
     
-    //Test triangle
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
-
 
     programID = LoadShaders("./vertex_shader.vs","./fragment_shader.fs");
-
     glUseProgram(programID);
-
-    
-
 
 
 	MatrixID = glGetUniformLocation(programID, "MVP");
 	Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
 	View       = glm::lookAt(
-								glm::vec3(4,3,3), // Camera is at (4,3,3), in World Space
-								glm::vec3(0,0,0), // and looks at the origin
-								glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
-						   );
+                        glm::vec3(4,3,3), // Camera is at (4,3,3), in World Space
+                        glm::vec3(0,0,0), // and looks at the origin
+                        glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+                   );
 	Model      = glm::mat4(1.0f);
-	//MVP        = Projection * View * Model; // Remember, matrix multiplication is the other way around
+	//MVP        = Projection * View * Model;
 	MVP      = glm::mat4(1.0f);
 
 	static const GLfloat g_vertex_buffer_data[] = { 
-		-1.0f, -1.0f, 0.0f,
-		 1.0f, -1.0f, 0.0f,
-		 0.0f,  1.0f, 0.0f,
+		-0.5f, -0.5f, 0.0f,
+		 0.5f, -0.5f, 0.0f,
+		 0.0f,  0.5f, 0.0f,
 	};
-    /*
-    static const GLfloat g_box_points[] = { 
-		 0.0f, 0.0f, 0.0f,
-		 0.0f, 0.0f, 1.0f,
-		 0.0f, 1.0f, 0.0f,
-		 0.0f, 1.0f, 1.0f,
-
-		 1.0f, 0.0f, 0.0f,
-		 1.0f, 0.0f, 1.0f,
-		 1.0f, 1.0f, 0.0f,
-		 1.0f, 1.0f, 1.0f,
-	};
-    static const GLuint g_box_edges[] = { 
-        0,1,
-        1,3,
-        3,2,
-        2,0,
-
-        4,5,
-        5,7,
-        7,6,
-        6,4,
-
-        0,4,
-        1,5,
-        3,7,
-        2,6,
-    };*/
-	static const GLfloat g_box_points[] = { 
-		-1.0f, -1.0f, 0.0f,
-		 1.0f, -1.0f, 0.0f,
-		 0.0f,  1.0f, 0.0f,
-	};
-    static const GLuint g_box_edges[] = { 
+	static const GLuint g_vertex_buffer_indices[] = { 
         0,1,2,
-        2,1,0,
-        0,1,2,
-    };
-
-	glGenBuffers(1, &vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+	};
+    
+    glGenVertexArrays(1, &box_VAO);
+    glBindVertexArray(box_VAO);
+    glEnableVertexAttribArray(0);
 
 
+    glGenBuffers(1, &box_points_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(GLfloat)*9, g_vertex_buffer_data, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    //Test box
-    glGenVertexArrays(1, &boxVAO);
-    glBindVertexArray(boxVAO);
 
-	glGenBuffers(1, &box_pointsVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, box_pointsVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_box_points), g_box_points, GL_STATIC_DRAW);
-
-	glGenBuffers(1, &box_edgesVBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, box_edgesVBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(g_box_edges), g_box_edges, GL_STATIC_DRAW);
-
+    glGenBuffers(1, &box_indices_VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, box_indices_VBO);
+    glBufferData(box_indices_VBO, sizeof(GLuint)*3, g_vertex_buffer_indices, GL_STATIC_DRAW);
 
     glBindVertexArray(0);
-
-    //glEnable(GL_DEPTH_TEST);
-    // Accept fragment if it closer to the camera than the former one
-    //glDepthFunc(GL_LESS);
-    //glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
-    return true;
-
 }
 
 
@@ -241,64 +185,34 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 //We don't wanna modify
 void OpenGL_Renderer::draw()
 {
-	glClear( GL_COLOR_BUFFER_BIT);
+
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     //draw_particles(render_info.n_particles, render_info.x, render_info.y, render_info.z);
     printf("draw\n");
     draw_box();
 
 	// Swap buffers
-	glfwSwapBuffers(window);
 
 }
 
 void OpenGL_Renderer::draw_box()
 {
 
+    glUseProgram(programID);
+
 	// Use our shader
-	glUseProgram(programID);
 	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-    
-	// 1rst attribute buffer : vertices
-    glBindVertexArray(VertexArrayID);
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glVertexAttribPointer(
-		0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-		3,                  // size
-		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		0,                  // stride
-		(void*)0            // array buffer offset
-	);
+    glBindVertexArray(box_VAO);
 
-	// Draw the triangle !
-	glDrawArrays(GL_TRIANGLES, 0, 3); // 3 indices starting at 0 -> 1 triangle
+    glDrawElements(GL_TRIANGLES, 1, GL_UNSIGNED_INT, (GLvoid*) 0); 
+    //glDrawArrays(GL_TRIANGLES,0,3);
     glBindVertexArray(0);
-	glDisableVertexAttribArray(0);
-    
-    /*
-    glBindVertexArray(boxVAO);
 
-	glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, box_pointsVBO);
-    glVertexAttribPointer(
-            0,                  // attribute 0
-            3,                  // size
-            GL_FLOAT,           // type
-            GL_FALSE,           // normalized?
-            0,                  // stride
-            (void*)0            // array buffer offset
-        );
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, box_edgesVBO);
-    //glDrawElements(GL_LINES,12,GL_UNSIGNED_INT,0);
-    glDrawElements(GL_TRIANGLES,3,GL_UNSIGNED_INT,0);
-
-	glDisableVertexAttribArray(0);
-    */
-
+   
+	glfwSwapBuffers(window);
 }
 
 void OpenGL_Renderer::draw_particles(   size_t n_particles,
