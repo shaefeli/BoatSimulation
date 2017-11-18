@@ -150,29 +150,101 @@ bool OpenGL_Renderer::init( int argc, char** argv)
                         glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                    );
 	Model      = glm::mat4(1.0f);
-	//MVP        = Projection * View * Model;
-	MVP      = glm::mat4(1.0f);
+	MVP        = Projection * View * Model;
+	//MVP      = glm::mat4(1.0f);
 
-	static const GLfloat g_vertex_buffer_data[] = { 
-		-0.5f, -0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		 0.0f,  0.5f, 0.0f,
+    static const GLfloat g_vertex_buffer_data[] = { 
+        //Bottom face
+		0.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 1.0f,
+
+		1.0f, 0.0f, 1.0f,
+		0.0f, 0.0f, 1.0f,
+
+		0.0f, 0.0f, 1.0f,
+		0.0f, 0.0f, 0.0f,
+
+        //Upwards face
+		0.0f, 1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,
+
+		1.0f, 1.0f, 0.0f,
+		1.0f, 1.0f, 1.0f,
+
+		1.0f, 1.0f, 1.0f,
+		0.0f, 1.0f, 1.0f,
+
+		0.0f, 1.0f, 1.0f,
+		0.0f, 1.0f, 0.0f,
+
+        //Merge them
+		0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+
+		1.0f, 0.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,
+
+		1.0f, 0.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+
+		0.0f, 0.0f, 1.0f,
+		0.0f, 1.0f, 1.0f,
+
+
 	};
-	static const GLuint g_vertex_buffer_indices[] = { 
-        0,1,2,
-	};
+
+    int nparticles = 3;
+    static const GLfloat g_particle_x[] = { 
+		0.2f,
+		0.6f,
+		0.0f,
+    };
+    static const GLfloat g_particle_y[] = { 
+		0.2f,
+		0.0f,
+		0.1f,
+    };
+    static const GLfloat g_particle_z[] = { 
+		0.2f,
+		0.5f,
+		0.5f,
+    };
+    glPointSize(8.);
+	
     
-    GLuint box_VAO;
+    //GLuint box_VAO;
 	glGenVertexArrays(1, &box_VAO);
 	glBindVertexArray(box_VAO);
 
     
-	GLuint box_points_VBO;
+	//GLuint box_points_VBO;
 	glGenBuffers(1, &box_points_VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
-    
+
+	glGenVertexArrays(1, &particles_VAO);
+	glBindVertexArray(particles_VAO);
+
+	glGenBuffers(1, &particles_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
+	glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), (void*) NULL, GL_DYNAMIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER,
+                    0,
+                    nparticles*sizeof(GLfloat),
+                    g_particle_x);
+	glBufferSubData(GL_ARRAY_BUFFER,
+                    nparticles*sizeof(GLfloat),
+                    nparticles*sizeof(GLfloat),
+                    g_particle_y);
+	glBufferSubData(GL_ARRAY_BUFFER,
+                    2*nparticles*sizeof(GLfloat),
+                    nparticles*sizeof(GLfloat),
+                    g_particle_z);
+	//glBufferData(GL_ARRAY_BUFFER, 0, nparticles*sizeof(GLfloat), GL_STATIC_DRAW);
 
 }
 
@@ -205,9 +277,10 @@ void OpenGL_Renderer::draw_box()
 		// Send our transformation to the currently bound shader, 
 		// in the "MVP" uniform
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        
 
-		// 1rst attribute buffer : vertices
-		glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(0);
+		glBindVertexArray(box_VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
 		glVertexAttribPointer(
 			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
@@ -219,9 +292,29 @@ void OpenGL_Renderer::draw_box()
 		);
 
 		// Draw the triangle !
-		glDrawArrays(GL_TRIANGLES, 0, 3); // 3 indices starting at 0 -> 1 triangle
+		glDrawArrays(GL_LINES, 0, 2*12); // 3 indices starting at 0 -> 1 triangle
+        glDisableVertexAttribArray(0);
 
-		glDisableVertexAttribArray(0);
+        glEnableVertexAttribArray(0);
+        //Draw the points
+		glBindVertexArray(particles_VAO);
+		glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
+
+        int nparticles = 3;
+		glVertexAttribPointer(
+			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+			3,                  // size
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			sizeof(GLfloat)*nparticles,// stride
+			(void*)0            // array buffer offset
+		);
+
+		// Draw the triangle !
+		glDrawArrays(GL_POINTS, 0, 3); // 3 indices starting at 0 -> 1 triangle
+
+
+		//glDisableVertexAttribArray(0);
 
    
 	glfwSwapBuffers(window);

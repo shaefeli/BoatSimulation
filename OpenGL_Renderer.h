@@ -15,7 +15,10 @@ class OpenGL_Renderer
     GLuint programID;
 
     GLuint box_VAO;
-    GLuint box_points_VBO, box_indices_VBO;
+    GLuint box_points_VBO;
+
+    GLuint particles_VAO;
+    GLuint particles_VBO;
 
 	GLuint MatrixID;//uniform
 	glm::mat4 Projection;
