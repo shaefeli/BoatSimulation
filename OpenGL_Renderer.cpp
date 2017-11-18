@@ -16,6 +16,7 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 	// Read the Vertex Shader code from the file
 	std::string VertexShaderCode;
 	std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
+    printf("%s\n",glGetString(GL_VERSION));
 	if(VertexShaderStream.is_open()){
 		std::string Line = "";
 		while(getline(VertexShaderStream, Line))
@@ -118,8 +119,8 @@ bool OpenGL_Renderer::init( int argc, char** argv)
     //glfwWindowHint(GLFW_SAMPLES, 4);//Antialiasing
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Open a window and create its OpenGL context
     //GLFWwindow* window; // this variable is global for simplicity)
@@ -195,22 +196,26 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 
 
 	};
+    static const GLfloat g_particle[] = { 
+		0.0f, 0.0f, 0.0f,
+		0.5f, 0.5f, 0.5f,
+		1.0f, 1.0f, 1.0f,
+    };
 
-    int nparticles = 3;
     static const GLfloat g_particle_x[] = { 
-		0.2f,
-		0.6f,
 		0.0f,
+		0.5f,
+		1.0f,
     };
     static const GLfloat g_particle_y[] = { 
-		0.2f,
 		0.0f,
-		0.1f,
+		0.5f,
+		1.0f,
     };
     static const GLfloat g_particle_z[] = { 
-		0.2f,
-		0.5f,
-		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
     };
     glPointSize(8.);
 	
@@ -225,25 +230,49 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 	glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
+    //glBindVertexArray(0);
 
 	glGenVertexArrays(1, &particles_VAO);
 	glBindVertexArray(particles_VAO);
 
 	glGenBuffers(1, &particles_VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
-	glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), (void*) NULL, GL_DYNAMIC_DRAW);
+    
+    size_t nparticles = render_info.n_particles;
+    printf("n_particles: %lu\n",nparticles);
+    //nparticles = 5;
+
+    float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
+    for( int i = 0; i < nparticles; i++ ) {
+        interleaved_data[i*3 + 0] = render_info.x[i];
+        interleaved_data[i*3 + 1] = render_info.y[i];
+        interleaved_data[i*3 + 2] = render_info.z[i];
+    }
+
+	glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), interleaved_data, GL_STATIC_DRAW);
+    free(interleaved_data);//optimize this
+    
+
+	//glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), (void*) NULL, GL_STATIC_DRAW);
+    /*
 	glBufferSubData(GL_ARRAY_BUFFER,
                     0,
-                    nparticles*sizeof(GLfloat),
-                    g_particle_x);
+                    nparticles*sizeof(float),
+                    render_info.x);
 	glBufferSubData(GL_ARRAY_BUFFER,
-                    nparticles*sizeof(GLfloat),
-                    nparticles*sizeof(GLfloat),
-                    g_particle_y);
+                    nparticles*sizeof(float),
+                    nparticles*sizeof(float),
+                    render_info.y);
 	glBufferSubData(GL_ARRAY_BUFFER,
-                    2*nparticles*sizeof(GLfloat),
-                    nparticles*sizeof(GLfloat),
-                    g_particle_z);
+                    2*nparticles*sizeof(float),
+                    nparticles*sizeof(float),
+                    render_info.z);
+                    */
+    printf("n_particles: %lu\n", nparticles);
+    for( size_t i = 0; i < nparticles; i++ ) {
+       printf("Particle position: %f,%f,%f\n",render_info.x[i],render_info.y[i],render_info.z[i]);
+    }
+
 	//glBufferData(GL_ARRAY_BUFFER, 0, nparticles*sizeof(GLfloat), GL_STATIC_DRAW);
 
 }
@@ -257,7 +286,7 @@ void OpenGL_Renderer::draw()
     glClear( GL_COLOR_BUFFER_BIT );
 
     //draw_particles(render_info.n_particles, render_info.x, render_info.y, render_info.z);
-    printf("draw\n");
+    //printf("draw\n");
     draw_box();
 
 	// Swap buffers
@@ -279,8 +308,8 @@ void OpenGL_Renderer::draw_box()
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
         
 
-        glEnableVertexAttribArray(0);
 		glBindVertexArray(box_VAO);
+        glEnableVertexArrayAttrib(box_VAO,0);
 		glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
 		glVertexAttribPointer(
 			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
@@ -295,26 +324,45 @@ void OpenGL_Renderer::draw_box()
 		glDrawArrays(GL_LINES, 0, 2*12); // 3 indices starting at 0 -> 1 triangle
         glDisableVertexAttribArray(0);
 
-        glEnableVertexAttribArray(0);
         //Draw the points
+        
+        
+        glEnableVertexArrayAttrib(particles_VAO,0);
 		glBindVertexArray(particles_VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
 
-        int nparticles = 3;
+        size_t nparticles = render_info.n_particles;
+
+
+        float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
+        for( int i = 0; i < nparticles; i++ ) {
+            interleaved_data[i*3 + 0] = render_info.x[i];
+            interleaved_data[i*3 + 1] = render_info.y[i];
+            interleaved_data[i*3 + 2] = render_info.z[i];
+        }
+
+	glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), interleaved_data, GL_STATIC_DRAW);
+    free(interleaved_data);//optimize this
+    
+
+
+
+        //nparticles = 3;
+        printf("n_particles:%lu\n", render_info.n_particles);
 		glVertexAttribPointer(
 			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
 			3,                  // size
 			GL_FLOAT,           // type
 			GL_FALSE,           // normalized?
-			sizeof(GLfloat)*nparticles,// stride
+			0,// stride
 			(void*)0            // array buffer offset
 		);
 
 		// Draw the triangle !
-		glDrawArrays(GL_POINTS, 0, 3); // 3 indices starting at 0 -> 1 triangle
+		glDrawArrays(GL_POINTS, 0, nparticles*3); // 3 indices starting at 0 -> 1 triangle
+        
 
-
-		//glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(0);
 
    
 	glfwSwapBuffers(window);
