@@ -144,9 +144,11 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 
 
 	MatrixID = glGetUniformLocation(programID, "MVP");
+	color_uniform = glGetUniformLocation(programID, "fragment_color");
+
 	Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
 	View       = glm::lookAt(
-                        glm::vec3(4,3,3), // Camera is at (4,3,3), in World Space
+                        glm::vec3(2,2,2), // Camera is at (4,3,3), in World Space
                         glm::vec3(0,0,0), // and looks at the origin
                         glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                    );
@@ -196,30 +198,15 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 
 
 	};
-    static const GLfloat g_particle[] = { 
-		0.0f, 0.0f, 0.0f,
-		0.5f, 0.5f, 0.5f,
-		1.0f, 1.0f, 1.0f,
-    };
 
-    static const GLfloat g_particle_x[] = { 
-		0.0f,
-		0.5f,
-		1.0f,
-    };
-    static const GLfloat g_particle_y[] = { 
-		0.0f,
-		0.5f,
-		1.0f,
-    };
-    static const GLfloat g_particle_z[] = { 
-		0.0f,
-		0.0f,
-		0.0f,
-    };
     glPointSize(8.);
 	
     
+    //Enable depth test
+    glEnable(GL_DEPTH_TEST);
+    //Accept fragment if it closer to the camera than the former one
+    glDepthFunc(GL_LESS); 
+
     //GLuint box_VAO;
 	glGenVertexArrays(1, &box_VAO);
 	glBindVertexArray(box_VAO);
@@ -230,7 +217,7 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 	glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
-    //glBindVertexArray(0);
+    glBindVertexArray(0);
 
 	glGenVertexArrays(1, &particles_VAO);
 	glBindVertexArray(particles_VAO);
@@ -242,38 +229,18 @@ bool OpenGL_Renderer::init( int argc, char** argv)
     printf("n_particles: %lu\n",nparticles);
     //nparticles = 5;
 
-    float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
+    //float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
+    interleaved_buffer = (float *)malloc(3*nparticles*sizeof(float));
     for( int i = 0; i < nparticles; i++ ) {
-        interleaved_data[i*3 + 0] = render_info.x[i];
-        interleaved_data[i*3 + 1] = render_info.y[i];
-        interleaved_data[i*3 + 2] = render_info.z[i];
+        interleaved_buffer[i*3 + 0] = render_info.x[i];
+        interleaved_buffer[i*3 + 1] = render_info.y[i];
+        interleaved_buffer[i*3 + 2] = render_info.z[i];
     }
 
-	glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), interleaved_data, GL_STATIC_DRAW);
-    free(interleaved_data);//optimize this
+	glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), interleaved_buffer, GL_STATIC_DRAW);
+    //free(interleaved_data);//optimize this
     
-
-	//glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), (void*) NULL, GL_STATIC_DRAW);
-    /*
-	glBufferSubData(GL_ARRAY_BUFFER,
-                    0,
-                    nparticles*sizeof(float),
-                    render_info.x);
-	glBufferSubData(GL_ARRAY_BUFFER,
-                    nparticles*sizeof(float),
-                    nparticles*sizeof(float),
-                    render_info.y);
-	glBufferSubData(GL_ARRAY_BUFFER,
-                    2*nparticles*sizeof(float),
-                    nparticles*sizeof(float),
-                    render_info.z);
-                    */
-    printf("n_particles: %lu\n", nparticles);
-    for( size_t i = 0; i < nparticles; i++ ) {
-       printf("Particle position: %f,%f,%f\n",render_info.x[i],render_info.y[i],render_info.z[i]);
-    }
-
-	//glBufferData(GL_ARRAY_BUFFER, 0, nparticles*sizeof(GLfloat), GL_STATIC_DRAW);
+    glBindVertexArray(0);
 
 }
 
@@ -283,36 +250,27 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 void OpenGL_Renderer::draw()
 {
 
-    glClear( GL_COLOR_BUFFER_BIT );
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    //draw_particles(render_info.n_particles, render_info.x, render_info.y, render_info.z);
-    //printf("draw\n");
+    glUseProgram(programID);
+    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    
+    draw_particles();
     draw_box();
 
-	// Swap buffers
+	glfwSwapBuffers(window);
 
 }
 
 void OpenGL_Renderer::draw_box()
 {
-
-    
+        glUniform3f(color_uniform, 1., 0., 0.);
 		// Clear the screen
-		glClear( GL_COLOR_BUFFER_BIT );
-
-		// Use our shader
-		glUseProgram(programID);
-
-		// Send our transformation to the currently bound shader, 
-		// in the "MVP" uniform
-		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-        
-
 		glBindVertexArray(box_VAO);
         glEnableVertexArrayAttrib(box_VAO,0);
 		glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
 		glVertexAttribPointer(
-			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+			0,                  // attribute
 			3,                  // size
 			GL_FLOAT,           // type
 			GL_FALSE,           // normalized?
@@ -323,62 +281,43 @@ void OpenGL_Renderer::draw_box()
 		// Draw the triangle !
 		glDrawArrays(GL_LINES, 0, 2*12); // 3 indices starting at 0 -> 1 triangle
         glDisableVertexAttribArray(0);
+		glBindVertexArray(0);
+}
+
+void OpenGL_Renderer::draw_particles( )
+{
+        glUniform3f(color_uniform, 0., 0., 1.);
 
         //Draw the points
-        
-        
         glEnableVertexArrayAttrib(particles_VAO,0);
 		glBindVertexArray(particles_VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
 
         size_t nparticles = render_info.n_particles;
 
-
-        float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
+        //float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
         for( int i = 0; i < nparticles; i++ ) {
-            interleaved_data[i*3 + 0] = render_info.x[i];
-            interleaved_data[i*3 + 1] = render_info.y[i];
-            interleaved_data[i*3 + 2] = render_info.z[i];
+            interleaved_buffer[i*3 + 0] = render_info.x[i];
+            interleaved_buffer[i*3 + 1] = render_info.y[i];
+            interleaved_buffer[i*3 + 2] = render_info.z[i];
         }
 
-	glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), interleaved_data, GL_STATIC_DRAW);
-    free(interleaved_data);//optimize this
+	glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), interleaved_buffer, GL_STATIC_DRAW);
+    //free(interleaved_data);
     
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        0,
+        (void*)0
+    );
 
+    glDrawArrays(GL_POINTS, 0, nparticles*3);
 
+    glDisableVertexAttribArray(0);
 
-        //nparticles = 3;
-        printf("n_particles:%lu\n", render_info.n_particles);
-		glVertexAttribPointer(
-			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
-			3,                  // size
-			GL_FLOAT,           // type
-			GL_FALSE,           // normalized?
-			0,// stride
-			(void*)0            // array buffer offset
-		);
-
-		// Draw the triangle !
-		glDrawArrays(GL_POINTS, 0, nparticles*3); // 3 indices starting at 0 -> 1 triangle
-        
-
-		glDisableVertexAttribArray(0);
-
-   
-	glfwSwapBuffers(window);
-}
-
-void OpenGL_Renderer::draw_particles(   size_t n_particles,
-                                        const float *x,
-                                        const float *y,
-                                        const float *z
-                                    )
-{
-    for( size_t i= 0; i < n_particles; i++){
-        float posX = x[i];
-        float posY = y[i];
-        float posZ = z[i];
-    }
 
 }
 

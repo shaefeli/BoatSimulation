@@ -20,11 +20,16 @@ class OpenGL_Renderer
     GLuint particles_VAO;
     GLuint particles_VBO;
 
-	GLuint MatrixID;//uniform
+    //uniforms
+	GLuint MatrixID;
+    GLuint color_uniform;
+
 	glm::mat4 Projection;
 	glm::mat4 View;
 	glm::mat4 Model;
 	glm::mat4 MVP;
+
+    float *interleaved_buffer;
 
     public:
  
@@ -41,7 +46,7 @@ class OpenGL_Renderer
         void draw();
 
         void draw_box();
-        void draw_particles(size_t n_particles, const float *x, const float *y, const float *z);
+        void draw_particles();
 
         void reshape(int x, int y);
 
