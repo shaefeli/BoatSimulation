@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv){
 
-    Basic_SPH_System bsph(1000);
+    Basic_SPH_System bsph(512);
     OpenGL_Renderer renderer;
 
     renderer.render_info.n_particles = bsph.particles.n_particles;

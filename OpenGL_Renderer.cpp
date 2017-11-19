@@ -148,7 +148,7 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 
 	Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
 	View       = glm::lookAt(
-                        glm::vec3(2,2,2), // Camera is at (4,3,3), in World Space
+                        glm::vec3(2,1.5,1.5), // Camera is at (4,3,3), in World Space
                         glm::vec3(0,0,0), // and looks at the origin
                         glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                    );
@@ -199,7 +199,7 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 
 	};
 
-    glPointSize(8.);
+    glPointSize(2.);
 	
     
     //Enable depth test
@@ -286,21 +286,21 @@ void OpenGL_Renderer::draw_box()
 
 void OpenGL_Renderer::draw_particles( )
 {
-        glUniform3f(color_uniform, 0., 0., 1.);
+    glUniform3f(color_uniform, 0., 0., 1.);
 
-        //Draw the points
-        glEnableVertexArrayAttrib(particles_VAO,0);
-		glBindVertexArray(particles_VAO);
-		glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
+    //Draw the points
+    glEnableVertexArrayAttrib(particles_VAO,0);
+    glBindVertexArray(particles_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
 
-        size_t nparticles = render_info.n_particles;
+    size_t nparticles = render_info.n_particles;
 
-        //float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
-        for( int i = 0; i < nparticles; i++ ) {
-            interleaved_buffer[i*3 + 0] = render_info.x[i];
-            interleaved_buffer[i*3 + 1] = render_info.y[i];
-            interleaved_buffer[i*3 + 2] = render_info.z[i];
-        }
+    //float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
+    for( int i = 0; i < nparticles; i++ ) {
+        interleaved_buffer[i*3 + 0] = render_info.x[i];
+        interleaved_buffer[i*3 + 1] = render_info.y[i];
+        interleaved_buffer[i*3 + 2] = render_info.z[i];
+    }
 
 	glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), interleaved_buffer, GL_STATIC_DRAW);
     //free(interleaved_data);
