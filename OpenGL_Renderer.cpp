@@ -1,4 +1,5 @@
 #include "OpenGL_Renderer.h"
+#include "Uniform_Grid.h"
 #include <cstdio>
 #include <fstream>
 #include <cstdlib>
@@ -198,8 +199,49 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 
 
 	};
+    static const GLfloat g_vertex_buffer_color[] = { 
+        //Bottom face
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
 
-    glPointSize(2.);
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+	};
+
+
+    glPointSize(4.);
 	
     
     //Enable depth test
@@ -217,6 +259,9 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 	glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
+	glGenBuffers(1, &box_colors_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, box_colors_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_color), g_vertex_buffer_color, GL_STATIC_DRAW);
     glBindVertexArray(0);
 
 	glGenVertexArrays(1, &particles_VAO);
@@ -224,6 +269,7 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 
 	glGenBuffers(1, &particles_VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
+
     
     size_t nparticles = render_info.n_particles;
     printf("n_particles: %lu\n",nparticles);
@@ -238,7 +284,19 @@ bool OpenGL_Renderer::init( int argc, char** argv)
     }
 
 	glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), interleaved_buffer, GL_STATIC_DRAW);
-    //free(interleaved_data);//optimize this
+
+	glGenBuffers(1, &colors_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, colors_VBO);
+
+    color_buffer = (float *)malloc(3*nparticles*sizeof(float));
+    for( size_t i = 0; i < nparticles; i++ ) {
+        color_buffer[3*i]     = 0.;
+        color_buffer[3*i+1]   = 0.;
+        color_buffer[3*i+2]   = 1.;
+    }
+
+    glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), color_buffer, GL_STATIC_DRAW);
+
     
     glBindVertexArray(0);
 
@@ -278,9 +336,24 @@ void OpenGL_Renderer::draw_box()
 			(void*)0            // array buffer offset
 		);
 
+        glEnableVertexArrayAttrib(box_VAO,1);
+		glBindBuffer(GL_ARRAY_BUFFER, box_colors_VBO);
+		glVertexAttribPointer(
+			1,                  // attribute
+			3,                  // size
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			0,                  // stride
+			(void*)0            // array buffer offset
+		);
+
+
+
+
 		// Draw the triangle !
 		glDrawArrays(GL_LINES, 0, 2*12); // 3 indices starting at 0 -> 1 triangle
         glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
 		glBindVertexArray(0);
 }
 
@@ -314,6 +387,25 @@ void OpenGL_Renderer::draw_particles( )
         (void*)0
     );
 
+    
+    glEnableVertexArrayAttrib(particles_VAO,1);
+	glBindBuffer(GL_ARRAY_BUFFER, colors_VBO);
+
+    //set_grid_color();
+    set_neighbor_color(0);
+
+    glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), color_buffer, GL_STATIC_DRAW);
+ 
+    glVertexAttribPointer(
+        1,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        0,
+        (void*)0
+    );
+
+
     glDrawArrays(GL_POINTS, 0, nparticles*3);
 
     glDisableVertexAttribArray(0);
@@ -331,4 +423,81 @@ void OpenGL_Renderer::reshape(int x, int y)
     //Far clipping plane distance: 20.0
      
 }
+
+
+
+
+void OpenGL_Renderer::set_grid_color()
+{
+    size_t nparticles = render_info.n_particles;
+    Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
+    for( size_t i = 0; i < nparticles; i++ ) {
+        size_t gi,gj,gk;
+        ug.query_cell(render_info.x[i],render_info.y[i],render_info.z[i],gi,gj,gk);
+        //printf("grid positions: %lu %lu %lu\n",gi,gj,gk);
+        //printf("cell numbers: %lu %lu %lu\n",ug.n_cells_x, ug.n_cells_y, ug.n_cells_z);
+        //printf("colors: %f %f %f\n",float(gi)/ug.n_cells_x,float(gj)/ug.n_cells_y,float(gk)/ug.n_cells_z);
+        color_buffer[3*i]   = float(gi)/ug.n_cells_x;
+        color_buffer[3*i+1] = float(gj)/ug.n_cells_y;
+        color_buffer[3*i+2] = float(gk)/ug.n_cells_z;
+    }
+
+}
+
+
+void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
+{
+    Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
+    ug.build(render_info.x,render_info.y,render_info.z,render_info.n_particles);
+   
+
+    for( size_t i = 0; i < render_info.n_particles; i++ ) {
+        color_buffer[3*i]   = 0.;
+        color_buffer[3*i+1] = 0.;
+        color_buffer[3*i+2] = 1.;
+    }
+
+
+    std::vector<size_t> neighbor_cells;
+    ug.query_neighbors(render_info.x[particle_index],
+                    render_info.y[particle_index],
+                    render_info.z[particle_index],
+                    neighbor_cells);
+
+    int alternate = 0;
+    for( size_t i = 0; i < neighbor_cells.size(); i++ ) {
+        std::vector<size_t> *cell = &(ug.cells[neighbor_cells[i]]);
+        //printf("cell_size: %d \n",cell->size());
+        for( int j = 0; j < cell->size(); j++ ) {
+            size_t particle_pos = (*cell)[j];
+            if( alternate == 0 ) {
+                color_buffer[3*particle_pos]   = 0.;
+                color_buffer[3*particle_pos+1] = 1.;
+                color_buffer[3*particle_pos+2] = 1.;
+            } else if( alternate == 1 ){
+                color_buffer[3*particle_pos]   = 1.;
+                color_buffer[3*particle_pos+1] = 1.;
+                color_buffer[3*particle_pos+2] = 0.;
+            } else {
+                color_buffer[3*particle_pos]   = 1.;
+                color_buffer[3*particle_pos+1] = 0.;
+                color_buffer[3*particle_pos+2] = 1.;
+            }
+        }
+        alternate = (alternate+1)%3;
+    }
+    color_buffer[3*particle_index]   = 1.;
+    color_buffer[3*particle_index+1] = 1.;
+    color_buffer[3*particle_index+2] = 0.;
+
+}
+
+
+
+
+
+
+
+
+
 

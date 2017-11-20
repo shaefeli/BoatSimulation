@@ -15,10 +15,10 @@ class OpenGL_Renderer
     GLuint programID;
 
     GLuint box_VAO;
-    GLuint box_points_VBO;
+    GLuint box_points_VBO,box_colors_VBO;
 
     GLuint particles_VAO;
-    GLuint particles_VBO;
+    GLuint particles_VBO, colors_VBO;
 
     //uniforms
 	GLuint MatrixID;
@@ -30,6 +30,7 @@ class OpenGL_Renderer
 	glm::mat4 MVP;
 
     float *interleaved_buffer;
+    float *color_buffer;
 
     public:
  
@@ -47,6 +48,10 @@ class OpenGL_Renderer
 
         void draw_box();
         void draw_particles();
+    
+        //Function to set the color according to parameter
+        void set_grid_color();
+        void set_neighbor_color( size_t particle_index );
 
         void reshape(int x, int y);
 
