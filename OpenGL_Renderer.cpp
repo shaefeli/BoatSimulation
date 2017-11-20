@@ -431,7 +431,7 @@ void OpenGL_Renderer::reshape(int x, int y)
 void OpenGL_Renderer::set_grid_color()
 {
     size_t nparticles = render_info.n_particles;
-    Uniform_Grid ug(0,0,0, 1,1,1, 0.2,0.2,0.2);
+    Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
     for( size_t i = 0; i < nparticles; i++ ) {
         size_t gi,gj,gk;
         ug.query_cell(render_info.x[i],render_info.y[i],render_info.z[i],gi,gj,gk);

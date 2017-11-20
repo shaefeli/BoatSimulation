@@ -1,4 +1,5 @@
 #include "Uniform_Grid.h"
+#include <algorithm>
 #include <cassert>
 #include <queue>
 #include <cstdio>
@@ -52,62 +53,48 @@ void Uniform_Grid::build(   const float *xs,
 {
     //Free the memory from the previous run
     if(filled) clean_up();
-
-    std::vector<std::queue<size_t>> cell_queues(n_cells);
-    //std::cerr<<"Pushing particles"<<std::endl;
+    
+    //First position: cell index
+    //Second position: particle index
+    std::vector<std::pair<size_t,size_t>> particle_index(n_particles);
+    size_t gi,gj,gk;
     for( size_t i = 0; i < n_particles; i++ ) {
-        float x,y,z;
-        x = xs[i];
-        y = ys[i];
-        z = zs[i];
-
-        //Normalize
-        x = (x-min_x)/(max_x-min_x);
-        y = (y-min_y)/(max_y-min_y);
-        z = (z-min_z)/(max_z-min_z);
-
-        //Move from [0,1] -> "grid space"
-        //Clamp it to the correct range, so if it's outside we consider it to be on the edge
-        //box. Should work fine, but better to clamp positions on the other code
-        size_t gi,gj,gk;
-
-        gi = floor(x*n_cells_x);
-        gj = floor(y*n_cells_y);
-        gk = floor(z*n_cells_z);
-
-        //Clamp it to a correct value
-        gi = std::max(size_t(0),std::min(n_cells_x-1,gi));
-        gj = std::max(size_t(0),std::min(n_cells_y-1,gj));
-        gk = std::max(size_t(0),std::min(n_cells_z-1,gk));
-
-        size_t position = unroll_grid_position(gi,gj,gk);
-
-        cell_queues[position].push(i);
+        query_cell(xs[i],ys[i],zs[i],gi,gj,gk);
+        particle_index[i].first  = unroll_grid_position(gi,gj,gk);
+        particle_index[i].second = i;
     }
-    //std::cerr<<"Finished pushing particles"<<std::endl;
+    std::sort(particle_index.begin(),particle_index.end(),
+                            []( const std::pair<size_t,size_t> &v1,
+                                const std::pair<size_t,size_t> &v2) -> bool {
+                                return v1.first < v2.first;
+                            });
 
-    for( size_t i = 0; i < n_cells; i++ ) {
+    std::vector<std::pair<size_t,size_t>>::iterator low,high;
+    low = particle_index.begin();
+    for( int i = 0; i < n_cells; i++ ) {
+        //std::cerr<<"pos:"<<i<<std::endl;
+        high = upper_bound(particle_index.begin(),particle_index.end(),
+                            std::pair<size_t,size_t>(i,0),
+                            []( const std::pair<size_t,size_t> &v1,
+                                const std::pair<size_t,size_t> &v2) -> bool {
+                                return v1.first < v2.first;
+                            });
 
-        cell_size[i] = cell_queues[i].size();
-        cells[i] = (size_t *)malloc(sizeof(size_t)*cell_size[i]);
+        size_t n_elements = high - low;
+        cells[i] = (size_t *)malloc(sizeof(size_t)*n_elements);
+        
 
-        size_t *cell = cells[i];
 
-        size_t j = 0;
-        while( not cell_queues[i].empty() ) {
-            //cells[i][j] = cell_queues[i].front();
-            cell[j] = cell_queues[i].front();
-
-            //Check that values are correct
-            assert( cell[j] < n_particles );
-            //std::cerr<<"part:"<<cell_queues[i].front()<<std::endl;
-            cell_queues[i].pop();
-            j++;
+        //std::cerr<<"n_elements:"<<n_elements<<std::endl;
+        cell_size[i] = n_elements;
+        for( int j = 0; j < n_elements; j++ ) {
+            //std::cerr<<"vals "<<i<<":"<<low->first<<" "<<low->second<<std::endl;
+            assert( low->first == i );
+            cells[low->first][j] = low->second;
+            low++;
         }
-        assert( j == cell_size[i] );
-        //std::cerr<<"All elements added: "<<j<<" "<<cell_size[i]<<std::endl;
-        //std::cerr<<"Finished adding particles into the array"<<std::endl;
     }
+    //std::cerr<<"done"<<std::endl;
     filled = true;
     //std::cerr<<"Filled positions"<<std::endl;
 }
@@ -178,6 +165,10 @@ void Uniform_Grid::query_cell(float x, float y, float z, size_t &i, size_t &j, s
         i = floor(x*n_cells_x);
         j = floor(y*n_cells_y);
         k = floor(z*n_cells_z);
+
+        i = std::max(size_t(0),std::min(size_t(n_cells_x-1),i));
+        j = std::max(size_t(0),std::min(size_t(n_cells_y-1),j));
+        k = std::max(size_t(0),std::min(size_t(n_cells_z-1),k));
 }
 
 
