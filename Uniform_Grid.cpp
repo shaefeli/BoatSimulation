@@ -26,6 +26,7 @@ Uniform_Grid::Uniform_Grid(float min_x, float min_y, float min_z,
 
     filled = false;
 }
+
 Uniform_Grid::~Uniform_Grid()
 {
     //std::cerr<<"destroying grid"<<std::endl;

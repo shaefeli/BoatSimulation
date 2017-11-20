@@ -481,11 +481,11 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
             //std::cerr<<"access_position: "<<j<<std::endl;
             //std::cerr<<std::endl;
             if( alternate == 0 ) {
-                color_buffer[3*particle_pos]   = 0.;
-                color_buffer[3*particle_pos+1] = 1.;
-                color_buffer[3*particle_pos+2] = 1.;
-            } else if( alternate == 1 ){
                 color_buffer[3*particle_pos]   = 1.;
+                color_buffer[3*particle_pos+1] = 0.;
+                color_buffer[3*particle_pos+2] = 0.;
+            } else if( alternate == 1 ){
+                color_buffer[3*particle_pos]   = 0.;
                 color_buffer[3*particle_pos+1] = 1.;
                 color_buffer[3*particle_pos+2] = 0.;
             } else {
@@ -494,7 +494,7 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
                 color_buffer[3*particle_pos+2] = 1.;
             }
         }
-        alternate = (alternate+1)%3;
+        alternate = (alternate+1)%2;
         //std::cerr<<"colors drawn"<<std::endl;
     }
     color_buffer[3*particle_index]   = 1.;
