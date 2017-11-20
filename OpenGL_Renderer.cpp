@@ -470,7 +470,7 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
         assert(neighbor_cells[i] < ug.n_cells);
         size_t *cell = ug.cells[neighbor_cells[i]];
         size_t cell_size = ug.cell_size[neighbor_cells[i]];
-        std::cerr<<"nneigbors:"<<neighbor_cells.size()<<std::endl;
+        //std::cerr<<"nneigbors:"<<neighbor_cells.size()<<std::endl;
         //std::cerr<<"drawing colors"<<std::endl;
         for( int j = 0; j < cell_size; j++ ) {
             size_t particle_pos = cell[j];

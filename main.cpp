@@ -19,8 +19,8 @@ int main(int argc, char** argv){
     unsigned int it;
     while(true) {
         //std::cout<<"iteration "<<it<<std::endl;
-        usleep(10000);
-        bsph.run_step( 0.01 );
+        usleep(100000);
+        bsph.run_step( 0.1 );
         renderer.draw();
         it++;
 
