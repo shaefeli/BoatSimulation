@@ -1,5 +1,6 @@
 #include "OpenGL_Renderer.h"
 #include "Uniform_Grid.h"
+#include <iostream>
 #include <cstdio>
 #include <fstream>
 #include <cstdlib>
@@ -430,7 +431,7 @@ void OpenGL_Renderer::reshape(int x, int y)
 void OpenGL_Renderer::set_grid_color()
 {
     size_t nparticles = render_info.n_particles;
-    Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
+    Uniform_Grid ug(0,0,0, 1,1,1, 0.2,0.2,0.2);
     for( size_t i = 0; i < nparticles; i++ ) {
         size_t gi,gj,gk;
         ug.query_cell(render_info.x[i],render_info.y[i],render_info.z[i],gi,gj,gk);
@@ -466,10 +467,19 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
 
     int alternate = 0;
     for( size_t i = 0; i < neighbor_cells.size(); i++ ) {
-        std::vector<size_t> *cell = &(ug.cells[neighbor_cells[i]]);
-        //printf("cell_size: %d \n",cell->size());
-        for( int j = 0; j < cell->size(); j++ ) {
-            size_t particle_pos = (*cell)[j];
+        assert(neighbor_cells[i] < ug.n_cells);
+        size_t *cell = ug.cells[neighbor_cells[i]];
+        size_t cell_size = ug.cell_size[neighbor_cells[i]];
+        std::cerr<<"nneigbors:"<<neighbor_cells.size()<<std::endl;
+        //std::cerr<<"drawing colors"<<std::endl;
+        for( int j = 0; j < cell_size; j++ ) {
+            size_t particle_pos = cell[j];
+            //std::cerr<<"Particle position: "<<particle_pos<<std::endl;
+            //std::cerr<<"cell number: "<<neighbor_cells[i]<<std::endl;
+            //std::cerr<<"ncells: "<<ug.n_cells<<std::endl;
+            //std::cerr<<"Cell_size: "<<ug.cell_size[i]<<std::endl;
+            //std::cerr<<"access_position: "<<j<<std::endl;
+            //std::cerr<<std::endl;
             if( alternate == 0 ) {
                 color_buffer[3*particle_pos]   = 0.;
                 color_buffer[3*particle_pos+1] = 1.;
@@ -485,10 +495,13 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
             }
         }
         alternate = (alternate+1)%3;
+        //std::cerr<<"colors drawn"<<std::endl;
     }
     color_buffer[3*particle_index]   = 1.;
     color_buffer[3*particle_index+1] = 1.;
     color_buffer[3*particle_index+2] = 0.;
+
+    ug.clean_up();
 
 }
 
