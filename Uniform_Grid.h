@@ -8,9 +8,11 @@ class Uniform_Grid
     public:
         //Best way do this non-manually, can look into improvements
         //std::vector<std::vector<size_t>> cells;
+        size_t *cell_info;  //Data contained by the cells
         size_t **cells;     //Pointer to the cells with the indices
         size_t *cell_size;  //Number of particles in a cell
         size_t n_cells;     //Number of cells
+        size_t n_particles;
         
         bool filled;//If true there is particle information in the cells
 

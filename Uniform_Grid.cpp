@@ -14,6 +14,8 @@ Uniform_Grid::Uniform_Grid(float min_x, float min_y, float min_z,
              //max_x(max_x+cell_x),   max_y(max_y),   max_z(max_z),
              cell_x(cell_x), cell_y(cell_y), cell_z(cell_z)
 {
+    n_particles = 0;
+    cell_info = NULL;
     n_cells_x = ceil((max_x-min_x)/cell_x);
     n_cells_y = ceil((max_y-min_y)/cell_y);
     n_cells_z = ceil((max_z-min_z)/cell_z);
@@ -22,8 +24,7 @@ Uniform_Grid::Uniform_Grid(float min_x, float min_y, float min_z,
     this->max_x = n_cells_x*cell_x+min_x;
     this->max_y = n_cells_y*cell_y+min_y;
     this->max_z = n_cells_z*cell_z+min_z;
-    //cells = std::vector<std::vector<size_t>>(n_cells_x*n_cells_y*n_cells_z,
-                                                //std::vector<size_t>(0));
+    
     cells = (size_t **)malloc(sizeof(size_t *)*n_cells_x*n_cells_y*n_cells_z);
     cell_size = (size_t *)malloc(sizeof(size_t)*n_cells_x*n_cells_y*n_cells_z);
     n_cells = n_cells_x*n_cells_y*n_cells_z;
@@ -39,6 +40,7 @@ Uniform_Grid::~Uniform_Grid()
     if(filled) clean_up();
     free(cells);
     free(cell_size);
+    free(cell_info);
     //std::cerr<<"grid destroyed"<<std::endl;
 }
 
@@ -56,6 +58,13 @@ void Uniform_Grid::build(   const float *xs,
                             const float *zs,
                             size_t n_particles )
 {
+    //Move into clean up maybe
+    if( this->n_particles != n_particles ) {
+        this->n_particles = n_particles;
+        if( cell_info != NULL ) free(cell_info);
+        cell_info = (size_t *)malloc(sizeof(size_t)*n_particles);
+    }
+
     //Free the memory from the previous run
     if(filled) clean_up();
     
@@ -74,6 +83,11 @@ void Uniform_Grid::build(   const float *xs,
                                 return v1.first < v2.first;
                             });
 
+    //copy sorted info
+    for( int i = 0; i < n_particles; i++ ) {
+        cell_info[i] = particle_index[i].second;
+    }
+
     std::vector<std::pair<size_t,size_t>>::iterator low,high;
     low = particle_index.begin();
     for( int i = 0; i < n_cells; i++ ) {
@@ -86,18 +100,20 @@ void Uniform_Grid::build(   const float *xs,
                             });
 
         size_t n_elements = high - low;
-        cells[i] = (size_t *)malloc(sizeof(size_t)*n_elements);
-        
-
+        //cells[i] = (size_t *)malloc(sizeof(size_t)*n_elements);
+        cells[i] = &(cell_info[low-particle_index.begin()]);
+        cell_size[i] = n_elements;
 
         //std::cerr<<"n_elements:"<<n_elements<<std::endl;
-        cell_size[i] = n_elements;
+        /*
         for( int j = 0; j < n_elements; j++ ) {
             //std::cerr<<"vals "<<i<<":"<<low->first<<" "<<low->second<<std::endl;
             assert( low->first == i );
             cells[low->first][j] = low->second;
             low++;
         }
+        */
+        low = high;
     }
     //std::cerr<<"done"<<std::endl;
     filled = true;
@@ -106,6 +122,7 @@ void Uniform_Grid::build(   const float *xs,
 
 void Uniform_Grid::clean_up()
 {
+    /*
     //std::cerr<<"clean up"<<std::endl;
     for( int i = 0; i < n_cells; i++ ) {
         free(cells[i]);
@@ -113,6 +130,7 @@ void Uniform_Grid::clean_up()
     }
     filled = false;
     //std::cerr<<"clean"<<std::endl;
+    */
 }
 
 void Uniform_Grid::query_neighbors(float x, float y, float z,
