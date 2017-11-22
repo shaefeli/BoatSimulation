@@ -1,5 +1,4 @@
 #include "OpenGL_Renderer.h"
-#include "Uniform_Grid.h"
 #include <iostream>
 #include <cstdio>
 #include <fstream>
@@ -106,7 +105,10 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 
 
 
-
+OpenGL_Renderer::OpenGL_Renderer() : ug(NULL)
+{
+    ;
+}
 
 bool OpenGL_Renderer::init( int argc, char** argv)
 {
@@ -306,7 +308,7 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 
 
 //We don't wanna modify
-void OpenGL_Renderer::draw()
+void OpenGL_Renderer::draw( )
 {
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -446,10 +448,15 @@ void OpenGL_Renderer::set_grid_color()
 }
 
 
+void OpenGL_Renderer::set_grid( Uniform_Grid *ug )
+{
+    this->ug = ug;
+}
+
 void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
 {
-    Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
-    ug.build(render_info.x,render_info.y,render_info.z,render_info.n_particles);
+    //Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
+    //ug.build(render_info.x,render_info.y,render_info.z,render_info.n_particles);
    
 
     for( size_t i = 0; i < render_info.n_particles; i++ ) {
@@ -458,18 +465,19 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
         color_buffer[3*i+2] = 1.;
     }
 
+    if( ug == NULL ) return;
 
     std::vector<size_t> neighbor_cells;
-    ug.query_neighbors(render_info.x[particle_index],
-                    render_info.y[particle_index],
-                    render_info.z[particle_index],
-                    neighbor_cells);
+    ug->query_neighbors(render_info.x[particle_index],
+                       render_info.y[particle_index],
+                       render_info.z[particle_index],
+                       neighbor_cells);
 
     int alternate = 0;
     for( size_t i = 0; i < neighbor_cells.size(); i++ ) {
-        assert(neighbor_cells[i] < ug.n_cells);
-        size_t *cell = ug.cells[neighbor_cells[i]];
-        size_t cell_size = ug.cell_size[neighbor_cells[i]];
+        assert(neighbor_cells[i] < ug->n_cells);
+        size_t *cell = ug->cells[neighbor_cells[i]];
+        size_t cell_size = ug->cell_size[neighbor_cells[i]];
         //std::cerr<<"nneigbors:"<<neighbor_cells.size()<<std::endl;
         //std::cerr<<"drawing colors"<<std::endl;
         for( int j = 0; j < cell_size; j++ ) {
@@ -501,7 +509,7 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
     color_buffer[3*particle_index+1] = 1.;
     color_buffer[3*particle_index+2] = 0.;
 
-    ug.clean_up();
+    ug->clean_up();
 
 }
 

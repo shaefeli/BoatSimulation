@@ -3,7 +3,22 @@
 #include <ctime>
 #include <cstdlib>
 
-Basic_SPH_System::Basic_SPH_System( size_t n_particles )
+Basic_SPH_System::Basic_SPH_System( size_t n_particles,
+                                    float b_min_x,//Boundary values
+                                    float b_min_y,
+                                    float b_min_z,
+                                    float b_max_x,
+                                    float b_max_y,
+                                    float b_max_z,
+                                    float cell_x,
+                                    float cell_y,
+                                    float cell_z
+                                  ) :
+    uniform_grid(b_min_x,b_min_y,b_min_z,
+                 b_max_x,b_max_y,b_max_z,
+                 cell_x,cell_y,cell_z),
+    b_min_x(b_min_x),b_min_y(b_min_y),b_min_z(b_min_z),
+    b_max_x(b_max_x),b_max_y(b_max_y),b_max_z(b_max_z)
 {
     particles.n_particles = n_particles;
 
@@ -73,9 +88,13 @@ size_t Basic_SPH_System::get_particle_number()
 //Main function that updates our particle system
 void Basic_SPH_System::run_step(float dt)
 {
+    //Update the neighbor information
+    uniform_grid.build(particles.x,particles.y,particles.z,particles.n_particles);
+
     //This way we can choose to have a function per particle
     //Or a general one that does all of them
     update_velocities_dummy(dt);
     update_positions_dummy(dt);
+
     
 }

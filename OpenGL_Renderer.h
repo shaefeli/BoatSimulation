@@ -4,7 +4,10 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <cstddef>
+#include "Uniform_Grid.h"
 
+#ifndef _PBS_OPENGL_RENDERER_
+#define _PBS_OPENGL_RENDERER_
 
 class OpenGL_Renderer
 {
@@ -29,6 +32,8 @@ class OpenGL_Renderer
 	glm::mat4 Model;
 	glm::mat4 MVP;
 
+    Uniform_Grid *ug;
+
     float *interleaved_buffer;
     float *color_buffer;
 
@@ -41,6 +46,7 @@ class OpenGL_Renderer
                             const float *z;
         } rendering_info_t;
        
+        OpenGL_Renderer();
         rendering_info_t render_info;
 
         bool init( int argc, char** argv);
@@ -54,5 +60,8 @@ class OpenGL_Renderer
         void set_neighbor_color( size_t particle_index );
 
         void reshape(int x, int y);
-
+        
+        void set_grid( Uniform_Grid *ug );
 };
+
+#endif

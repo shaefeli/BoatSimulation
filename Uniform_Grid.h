@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <cstddef>
 
+#ifndef _PBS_UNIFORM_GRID_
+#define _PBS_UNIFORM_GRID_
 
 class Uniform_Grid
 {
@@ -28,12 +30,17 @@ class Uniform_Grid
 
         //Builds all the corresponding structures
         void build(const float *x, const float *y, const float *z, size_t n_particles);
-
+        
+        //Returns a vector with the position of the neinghboring cells in the vector
         void query_neighbors(float x, float y, float z, std::vector<size_t> &cells);
-
+        
+        //Returns the indices of the particle x,y,z in the grid, as i,j,k
         void query_cell(float x, float y, float z, size_t &i, size_t &j, size_t &k);
         
         //cleans all the information contained
+        //Used internally mostly
         void clean_up();
 
 };
+
+#endif
