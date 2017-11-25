@@ -1,4 +1,5 @@
 #include "OpenGL_Renderer.h"
+#include "Maya_Interface.h"
 #include <cstdio>
 #include <fstream>
 #include <cstdlib>
@@ -301,7 +302,8 @@ void OpenGL_Renderer::draw_particles( )
             interleaved_buffer[i*3 + 1] = render_info.y[i];
             interleaved_buffer[i*3 + 2] = render_info.z[i];
         }
-
+     size_t frame = 0;
+    Maya_Interface::writeToMaya(frame,interleaved_buffer,nparticles);
 	glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), interleaved_buffer, GL_STATIC_DRAW);
     //free(interleaved_data);
     
