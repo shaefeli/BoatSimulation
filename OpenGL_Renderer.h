@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include "Maya_Interface.h"
 #include <cstddef>
 
 
@@ -39,9 +40,8 @@ class OpenGL_Renderer
                             const float *y;
                             const float *z;
         } rendering_info_t;
-       
+        
         rendering_info_t render_info;
-
         bool init( int argc, char** argv);
         void draw();
 
