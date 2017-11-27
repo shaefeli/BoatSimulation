@@ -29,7 +29,7 @@ Maya_Interface::Maya_Interface(size_t nr_particles){
 	}
 	ids << ";\n";
 }
-void Maya_Interface::writeToMaya(size_t frameNr, float* interleaved_positions, size_t nr_particles){
+void Maya_Interface::writeToMaya(size_t frameNr, float* x ,float* y, float* z, size_t nr_particles){
 
 	//Open the file to write
 	ofstream mayaFile;
@@ -92,7 +92,7 @@ void Maya_Interface::writeToMaya(size_t frameNr, float* interleaved_positions, s
   	stringstream positions;
   	positions << "setAttr \".pos0\" -type \"vectorArray\" " << nr_particles << " ";
   	for (int i=0; i<nr_particles; i++){
-  		positions  << interleaved_positions[i*3] << " " << interleaved_positions[i*3+1] << " " << interleaved_positions[i*3+2] << " ";
+  		positions  << x[i] << " " << y[i] << " " << z[i] << " ";
   	}
   	positions << ";\n";
 
@@ -102,6 +102,6 @@ void Maya_Interface::writeToMaya(size_t frameNr, float* interleaved_positions, s
   	afterParticles << "createNode nucleus -n \"nucleus1\";\n" << "rename -uid \"C11D1C29-44B6-A668-506C-24B574D4BE7C\";\n" << "setAttr \".nid\" " << nr_particles <<";\n" << "setAttr \".nid0\" " << nr_particles <<";\n";
 
   	//Write everything to file
-  	mayaFile << header.str() << "fileStart\n" << cube.str() << particuleInfos.str() << positions.str() << "\nids\n" << afterParticles.str() << "\nfileEnd\n" << "// End of frame" << frameNr << ".ma;"; 
+  	mayaFile << header.str() << this->fileStart << cube.str() << particuleInfos.str() << positions.str() << this->ids << afterParticles.str() << this->fileEnd << "// End of frame" << frameNr << ".ma;"; 
   	mayaFile.close();
 }

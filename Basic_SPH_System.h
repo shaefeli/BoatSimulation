@@ -1,5 +1,4 @@
 #include <cstddef>
-#define nr_particles 2
 
 typedef struct {
     size_t n_particles;

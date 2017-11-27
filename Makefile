@@ -9,7 +9,7 @@ main.o: main.cpp Basic_SPH_System.h
 	g++ -c main.cpp $(COMPILER_FLAGS) $(LIBRARIES)
 Basic_SPH_System.o: Basic_SPH_System.cpp Basic_SPH_System.h
 	g++ -c Basic_SPH_System.cpp $(COMPILER_FLAGS) $(LIBRARIES)
-OpenGL_Renderer.o: OpenGL_Renderer.cpp OpenGL_Renderer.h Maya_Interface.h
+OpenGL_Renderer.o: OpenGL_Renderer.cpp OpenGL_Renderer.h
 	g++ -c OpenGL_Renderer.cpp $(COMPILER_FLAGS)  $(LIBRARIES)
 Maya_Interface.o: Maya_Interface.cpp Maya_Interface.h
 	g++ -c Maya_Interface.cpp $(COMPILER_FLAGS) $(LIBRARIES)

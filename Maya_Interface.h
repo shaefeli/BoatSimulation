@@ -9,6 +9,6 @@ public:
     string fileEnd;
     string ids;
     Maya_Interface(size_t nr_particles);
-    static void writeToMaya(size_t frameNr, float* interleaved_positions, size_t nr_particles);
+    void writeToMaya(size_t frameNr, float* x ,float* y, float* z, size_t nr_particles);
 
 };

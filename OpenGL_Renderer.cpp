@@ -108,8 +108,6 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 
 bool OpenGL_Renderer::init( int argc, char** argv)
 {
-	size_t b= 2;
-	Maya_Interface a =  Maya_Interface(b);
     
     if( !glfwInit() )
     {
@@ -303,8 +301,6 @@ void OpenGL_Renderer::draw_particles( )
             interleaved_buffer[i*3 + 1] = render_info.y[i];
             interleaved_buffer[i*3 + 2] = render_info.z[i];
         }
-    size_t frame = 0;
-    Maya_Interface::writeToMaya(frame,interleaved_buffer,nparticles);
 	glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), interleaved_buffer, GL_STATIC_DRAW);
     //free(interleaved_data);
     
