@@ -328,7 +328,8 @@ void OpenGL_Renderer::draw_box()
         glUniform3f(color_uniform, 1., 0., 0.);
 		// Clear the screen
 		glBindVertexArray(box_VAO);
-        glEnableVertexArrayAttrib(box_VAO,0);
+        //glEnableVertexArrayAttrib(box_VAO,0);
+        glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
 		glVertexAttribPointer(
 			0,                  // attribute
@@ -339,7 +340,7 @@ void OpenGL_Renderer::draw_box()
 			(void*)0            // array buffer offset
 		);
 
-        glEnableVertexArrayAttrib(box_VAO,1);
+        glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER, box_colors_VBO);
 		glVertexAttribPointer(
 			1,                  // attribute
@@ -365,8 +366,9 @@ void OpenGL_Renderer::draw_particles( )
     glUniform3f(color_uniform, 0., 0., 1.);
 
     //Draw the points
-    glEnableVertexArrayAttrib(particles_VAO,0);
+    //glEnableVertexArrayAttrib(particles_VAO,0);
     glBindVertexArray(particles_VAO);
+    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
 
     size_t nparticles = render_info.n_particles;
@@ -391,7 +393,8 @@ void OpenGL_Renderer::draw_particles( )
     );
 
     
-    glEnableVertexArrayAttrib(particles_VAO,1);
+    //glEnableVertexArrayAttrib(particles_VAO,1);
+    glEnableVertexAttribArray(1);
 	glBindBuffer(GL_ARRAY_BUFFER, colors_VBO);
 
     //set_grid_color();
@@ -412,6 +415,7 @@ void OpenGL_Renderer::draw_particles( )
     glDrawArrays(GL_POINTS, 0, nparticles*3);
 
     glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
 
 
 }
