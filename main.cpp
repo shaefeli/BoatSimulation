@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv){
 
-    Basic_SPH_System bsph(100000, 0., 0., 0., 1., 1., 1., 0.1, 0.1, 0.1);
+    Basic_SPH_System bsph(10000, 0., 0., 0., 1., 1., 1., 0.1, 0.1, 0.1);
     OpenGL_Renderer renderer;
 
     renderer.render_info.n_particles = bsph.particles.n_particles;
@@ -19,13 +19,12 @@ int main(int argc, char** argv){
 
     renderer.init(argc,argv);
     unsigned int it;
-    while(true) {
+    while(!glfwWindowShouldClose(renderer.getWindow())){
         //std::cout<<"iteration "<<it<<std::endl;
         //usleep(10000);
         bsph.run_step( 0.001 );
         renderer.draw();
         it++;
-
     }
 
     return 0;

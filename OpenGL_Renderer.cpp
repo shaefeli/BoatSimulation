@@ -7,6 +7,12 @@
 #include <vector>
 
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
+        glfwSetWindowShouldClose(window, GL_TRUE);
+    }
+}
 
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path) {
 
@@ -103,8 +109,6 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 	return ProgramID;
 }
 
-
-
 OpenGL_Renderer::OpenGL_Renderer() : ug(NULL)
 {
     ;
@@ -121,27 +125,28 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 
 
     //glfwWindowHint(GLFW_SAMPLES, 4);//Antialiasing
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Open a window and create its OpenGL context
     //GLFWwindow* window; // this variable is global for simplicity)
     window = glfwCreateWindow( 1024, 768, "Tutorial 01", NULL, NULL);
-    if( window == NULL ){
+    if( !window ){
         fprintf( stderr, "Failed to open GLFW window.\n" );
         glfwTerminate();
-        return false;
+        exit(EXIT_FAILURE);
     }
     glfwMakeContextCurrent(window); // Initialize GLEW
-    glewExperimental=true; // Needed in core profile
+    glewExperimental=GL_TRUE; // Needed in core profile
     if (glewInit() != GLEW_OK) {
         fprintf(stderr, "Failed to initialize GLEW\n");
         return false;
     }
-
     
+    // Set the keyboard callback so that when we press ESC, it knows what to do.
+    glfwSetKeyCallback(window, key_callback);
 
     programID = LoadShaders("./vertex_shader.vs","./fragment_shader.fs");
     glUseProgram(programID);
@@ -302,7 +307,7 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 
     
     glBindVertexArray(0);
-
+    return true;
 }
 
 
@@ -320,7 +325,7 @@ void OpenGL_Renderer::draw( )
     draw_box();
 
 	glfwSwapBuffers(window);
-
+    glfwPollEvents();
 }
 
 void OpenGL_Renderer::draw_box()
@@ -328,7 +333,8 @@ void OpenGL_Renderer::draw_box()
         glUniform3f(color_uniform, 1., 0., 0.);
 		// Clear the screen
 		glBindVertexArray(box_VAO);
-        glEnableVertexArrayAttrib(box_VAO,0);
+        //glEnableVertexArrayAttrib(box_VAO,0);
+        glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, box_points_VBO);
 		glVertexAttribPointer(
 			0,                  // attribute
@@ -339,7 +345,7 @@ void OpenGL_Renderer::draw_box()
 			(void*)0            // array buffer offset
 		);
 
-        glEnableVertexArrayAttrib(box_VAO,1);
+        glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER, box_colors_VBO);
 		glVertexAttribPointer(
 			1,                  // attribute
@@ -365,8 +371,9 @@ void OpenGL_Renderer::draw_particles( )
     glUniform3f(color_uniform, 0., 0., 1.);
 
     //Draw the points
-    glEnableVertexArrayAttrib(particles_VAO,0);
+    //glEnableVertexArrayAttrib(particles_VAO,0);
     glBindVertexArray(particles_VAO);
+    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
 
     size_t nparticles = render_info.n_particles;
@@ -391,7 +398,8 @@ void OpenGL_Renderer::draw_particles( )
     );
 
     
-    glEnableVertexArrayAttrib(particles_VAO,1);
+    //glEnableVertexArrayAttrib(particles_VAO,1);
+    glEnableVertexAttribArray(1);
 	glBindBuffer(GL_ARRAY_BUFFER, colors_VBO);
 
     //set_grid_color();
@@ -412,6 +420,7 @@ void OpenGL_Renderer::draw_particles( )
     glDrawArrays(GL_POINTS, 0, nparticles*3);
 
     glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
 
 
 }

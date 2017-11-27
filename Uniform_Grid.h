@@ -40,7 +40,6 @@ class Uniform_Grid
         //cleans all the information contained
         //Used internally mostly
         void clean_up();
-
 };
 
 #endif

@@ -145,9 +145,9 @@ void Uniform_Grid::query_neighbors(float x, float y, float z,
     //Move from [0,1] -> "grid space"
     size_t gi,gj,gk;
     //If they get outside the bounds, they get assigned to the closest in-bounds
-    gi = size_t(std::max(0.,floor(x*n_cells_x)));
-    gj = size_t(std::max(0.,floor(y*n_cells_y)));
-    gk = size_t(std::max(0.,floor(z*n_cells_z)));
+    gi = size_t(std::max(0.f,floor(x*n_cells_x)));
+    gj = size_t(std::max(0.f,floor(y*n_cells_y)));
+    gk = size_t(std::max(0.f,floor(z*n_cells_z)));
 
     //clamp
     gi = std::min(size_t(n_cells_x-1),gi);
@@ -165,13 +165,13 @@ void Uniform_Grid::query_neighbors(float x, float y, float z,
                 if( (ti >= 0 and ti < (n_cells_x)) and
                     (tj >= 0 and tj < (n_cells_y)) and
                     (tk >= 0 and tk < (n_cells_z)) ) {
-                    std::cerr<<"neighbors:"<<ti<<" "<<tj<<" "<<tk<<std::endl;
+                    //std::cerr<<"neighbors:"<<ti<<" "<<tj<<" "<<tk<<std::endl;
                     cells.push_back( unroll_grid_position(ti,tj,tk) );
                 }
             }
         }
     }
-    std::cerr<<std::endl;
+//    std::cerr<<std::endl;
     
     
 }
@@ -187,9 +187,9 @@ void Uniform_Grid::query_cell(float x, float y, float z, size_t &i, size_t &j, s
         z = (z-min_z)/(max_z-min_z);
 
         //Move from [0,1] -> "grid space"
-        i = size_t(std::max(0.,floor(x*n_cells_x)));
-        j = size_t(std::max(0.,floor(y*n_cells_y)));
-        k = size_t(std::max(0.,floor(z*n_cells_z)));
+        i = size_t(std::max(0.f,floor(x*n_cells_x)));
+        j = size_t(std::max(0.f,floor(y*n_cells_y)));
+        k = size_t(std::max(0.f,floor(z*n_cells_z)));
 
         i = std::min(size_t(n_cells_x-1),i);
         j = std::min(size_t(n_cells_y-1),j);

@@ -1,5 +1,4 @@
 #include <GL/glew.h>
-#include <GL/glut.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -38,7 +37,7 @@ class OpenGL_Renderer
     float *color_buffer;
 
     public:
- 
+    
         typedef struct {
                             size_t n_particles;
                             const float *x;
@@ -49,6 +48,8 @@ class OpenGL_Renderer
         OpenGL_Renderer();
         rendering_info_t render_info;
 
+    
+        GLFWwindow* getWindow(){ return this->window;};
         bool init( int argc, char** argv);
         void draw();
 
