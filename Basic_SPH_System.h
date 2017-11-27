@@ -76,7 +76,7 @@ private:
      */
     float evalKernel_poly6(int &i, int &j, float &h);
     float evalKernel_spiky(int i, int j, float h);
-    float evalkernel_spiky_gradient(int &i, int &j, int &h);
+    float evalkernel_spiky_gradient(int &i, int &j, float &h);
 
     float evalKernel_visc( int i, int j, float h);
     float evalKernel_visc_laplacian(int &i, int &j, float &h);

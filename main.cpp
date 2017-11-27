@@ -16,10 +16,10 @@ int main(int argc, char** argv){
     state.mu = 0.1;
     state.rho0 = 1000;
     
-    Basic_SPH_System bsph(1000,
+    Basic_SPH_System bsph(5000,
                           0., 0., 0.,
                           1., 1., 1.,
-                          state.h * 10, state.h * 10, state.h * 10);
+                          state.h * 5, state.h * 5, state.h * 5);
     bsph.setSimState(state);
     bsph.finilizeInit();
 
@@ -33,7 +33,7 @@ int main(int argc, char** argv){
     renderer.set_grid( &bsph.uniform_grid );
 
     renderer.init(argc,argv);
-    unsigned int it;
+    unsigned int it = 0;
     
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << it * state.dt << "] sec\n";
