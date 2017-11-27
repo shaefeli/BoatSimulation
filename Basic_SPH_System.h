@@ -74,12 +74,12 @@ private:
     /**
      Different kernels for different properties
      */
-    float evalKernel_poly6(int i, int j, float h);
+    float evalKernel_poly6(int &i, int &j, float &h);
     float evalKernel_spiky(int i, int j, float h);
-    float evalkernel_spiky_gradient(int i, int j, int h);
+    float evalkernel_spiky_gradient(int &i, int &j, int &h);
 
     float evalKernel_visc( int i, int j, float h);
-    float evalKernel_visc_laplacian(int i, int j, float h);
+    float evalKernel_visc_laplacian(int &i, int &j, float &h);
     
     // distance between particles
     Vector3T<float> ij_vector(int i,int j);

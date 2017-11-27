@@ -40,9 +40,9 @@ Basic_SPH_System::Basic_SPH_System( size_t n_particles,
     particles.p = (float *)malloc(n_particles*sizeof(float));
 
     for( size_t i = 0; i < n_particles; i++ ) {
-       particles.x[i] = (float(rand())/RAND_MAX);
-       particles.y[i] = (float(rand())/RAND_MAX);
-       particles.z[i] = (float(rand())/RAND_MAX);
+       particles.x[i] = 0.2 + 0.3*(float(rand())/RAND_MAX);
+       particles.y[i] = 0.  + 0.1*(float(rand())/RAND_MAX);
+       particles.z[i] = 0.2 + 0.3*(float(rand())/RAND_MAX);
        //printf("Particle position: %f,%f,%f\n",particles.x[i],particles.y[i],particles.z[i]);
 
        particles.vx[i] = 0.0f; //(float(rand())/RAND_MAX);
@@ -94,7 +94,9 @@ Vector3T<float> Basic_SPH_System::ij_vector(int i, int j) {
     );
 }
 
-float Basic_SPH_System::evalKernel_poly6(int i, int j, float h){
+float Basic_SPH_System::evalKernel_poly6(int &i, int &j, float &h){
+    if (i == j ) return 0;
+    
     float r = this->distanceIJ(i,j);
     
     if ( r <= h){
@@ -105,6 +107,8 @@ float Basic_SPH_System::evalKernel_poly6(int i, int j, float h){
 }
 
 float Basic_SPH_System::evalKernel_spiky(int i, int j, float h){
+    if (i == j ) return 0;
+    
     float r = this->distanceIJ(i, j);
     
     if (r <= h){
@@ -117,7 +121,9 @@ float Basic_SPH_System::evalKernel_spiky(int i, int j, float h){
 /*
  * It also NEEDS to be multiplied by vector R!! R = r(i,j) vec
  */
-float Basic_SPH_System::evalkernel_spiky_gradient(int i, int j, int h){
+float Basic_SPH_System::evalkernel_spiky_gradient(int &i, int &j, int &h){
+    if (i == j ) return 0;
+    
     float r = this->distanceIJ(i, j);
 
     if (r <= h){
@@ -129,6 +135,8 @@ float Basic_SPH_System::evalkernel_spiky_gradient(int i, int j, int h){
 
 
 float Basic_SPH_System::evalKernel_visc(int i, int j, float h){
+    if (i == j ) return 0;
+    
     float r = this->distanceIJ(i, j);
     if (r <= h){
         return h3_15 * ( - r*r*r/(2*h3) + r*r/(h2) + h/(2*r) - 1);
@@ -137,7 +145,9 @@ float Basic_SPH_System::evalKernel_visc(int i, int j, float h){
     }
 }
 
-float Basic_SPH_System::evalKernel_visc_laplacian(int i, int j, float h) {
+float Basic_SPH_System::evalKernel_visc_laplacian(int &i, int &j, float &h) {
+    if (i == j ) return 0;
+    
     float r = this->distanceIJ(i, j);
     if (r <= h){
         return h3_15_visc * (h - r);
@@ -182,11 +192,11 @@ void Basic_SPH_System::calculate_Densities(){
             size_t cell_size = this->uniform_grid.cell_size[cellId];
 
             for (int j = 0; j < cell_size; j++){
-                size_t particleID = cell[j]; // in equations that's our J index
-                rho += this->evalKernel_poly6(i,particleID,this->simState.h);
+                auto particleID = static_cast<int>(cell[j]); // in equations that's our J index
+                rho += this->evalKernel_poly6(i,particleID, this->simState.h);
             }
         }
-        this->particles.rho[i] = rho;
+        this->particles.rho[i] = this->simState.rho0 + this->particles.mass * rho;
     }
 }
 
@@ -221,7 +231,7 @@ void Basic_SPH_System::calculate_Forces() {
         float F_press_y = 0.0f;
         float F_press_z = 0.0f;
 
-        float F_ext_y = -this->particles.mass * this->simState.g; // GRAVITY
+        float F_ext_y = -this->simState.g; // GRAVITY
 
         float pi = this->particles.p[i];
         float rhoi = this->particles.rho[i];
@@ -232,14 +242,15 @@ void Basic_SPH_System::calculate_Forces() {
 
             for (int j = 0; j < cell_size; j++){
                 auto particleID = static_cast<int>(cell[j]); // in equations that's our J index
-
+                if (particleID == i) continue; // we should not compute agains ourselves
+                
                 float pj = this->particles.p[particleID];
                 float rhoj = this->particles.rho[particleID];
                 float mj   = this->particles.mass;
 
                 // Calc Force from pressure
                 Vector3T<float> ijVec = this->ij_vector(i, particleID);
-                float F_p = this->evalkernel_spiky_gradient(i, particleID, static_cast<int>(this->simState.h));
+                float F_p = this->evalkernel_spiky_gradient(i, particleID, this->simState.h);
                 F_p *= rhoi * mj * ( pi /(rhoi * rhoi) + pj / (rhoj * rhoj) );
                 F_press_x += F_p * ijVec.x();
                 F_press_y += F_p * ijVec.y();
@@ -322,13 +333,13 @@ void Basic_SPH_System::run_step(float dt)
          * Sort of - No-Slip boundary condition .
          */
         if (this->particles.x[i] < 0 ) { particles.x[i] = 0.0f; particles.vx[i] = 0.0f; }
-        if (this->particles.x[i] > 1)  { particles.x[i] = 1.0; particles.vy[i] = 0.0f; }
+        if (this->particles.x[i] > 1)  { particles.x[i] = 1.0; particles.vx[i] = 0.0f; }
 
-        if (this->particles.y[i] < 0 ) { particles.y[i] = 0.0f; particles.vy[i] = 0.0f; }
-        if (this->particles.y[i] > 1)  { particles.y[i] = 1.0; particles.vy[i] = 0.0f; }
+        if (this->particles.y[i] < 0 ) { particles.y[i] = 0.0f; particles.vy[i] *= -0.75f; }
+        if (this->particles.y[i] > 1)  { particles.y[i] = 1.0;  particles.vy[i] *= -0.75f; }
 
         if (this->particles.z[i] < 0 ) { particles.z[i] = 0.0f; particles.vz[i] = 0.0f; }
-        if (this->particles.z[i] > 1)  { particles.z[i] = 1.0; particles.vz[i] = 0.0f; }
+        if (this->particles.z[i] > 1)  { particles.z[i] = 1.0;  particles.vz[i] = 0.0f; }
     }
 }
 

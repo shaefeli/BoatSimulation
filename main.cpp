@@ -7,14 +7,19 @@
 
 int main(int argc, char** argv){
 
-    Basic_SPH_System bsph(1000, 0., 0., 0., 1., 1., 1., 0.1, 0.1, 0.1);
+    
     SimState state;
-    state.dt = 1e-4;
+    state.dt = 1e-3;
     state.g  = 9.8;
     state.h  = 5e-2;
     state.k  = 1e3;
     state.mu = 0.1;
     state.rho0 = 1000;
+    
+    Basic_SPH_System bsph(1000,
+                          0., 0., 0.,
+                          1., 1., 1.,
+                          state.h * 10, state.h * 10, state.h * 10);
     bsph.setSimState(state);
     bsph.finilizeInit();
 
@@ -29,7 +34,9 @@ int main(int argc, char** argv){
 
     renderer.init(argc,argv);
     unsigned int it;
+    
     while(!glfwWindowShouldClose(renderer.getWindow())){
+        std::cout << "[" << it * state.dt << "] sec\n";
         //std::cout<<"iteration "<<it<<std::endl;
 //        usleep(10000);
         bsph.run_step( state.dt );
