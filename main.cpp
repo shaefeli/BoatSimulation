@@ -7,7 +7,22 @@
 
 int main(int argc, char** argv){
 
-    Basic_SPH_System bsph(10000, 0., 0., 0., 1., 1., 1., 0.1, 0.1, 0.1);
+    
+    SimState state;
+    state.dt = 1e-3;
+    state.g  = 9.8;
+    state.h  = 0.0625;
+    state.k  = 3.5;
+    state.mu = 3.5;
+    state.rho0 = 1000;
+    
+    Basic_SPH_System bsph(5000,
+                          0., 0., 0.,
+                          0.5, 0.5, 0.5,
+                          state.h , state.h , state.h );
+    bsph.setSimState(state);
+    bsph.finilizeInit();
+
     OpenGL_Renderer renderer;
 
     renderer.render_info.n_particles = bsph.particles.n_particles;
@@ -18,11 +33,13 @@ int main(int argc, char** argv){
     renderer.set_grid( &bsph.uniform_grid );
 
     renderer.init(argc,argv);
-    unsigned int it;
+    unsigned int it = 0;
+    
     while(!glfwWindowShouldClose(renderer.getWindow())){
+        std::cout << "[" << it * state.dt << "] sec\n";
         //std::cout<<"iteration "<<it<<std::endl;
-        //usleep(10000);
-        bsph.run_step( 0.001 );
+//        usleep(10000);
+        bsph.run_step( state.dt );
         renderer.draw();
         it++;
     }
