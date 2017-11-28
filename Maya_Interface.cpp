@@ -22,12 +22,13 @@ Maya_Interface::Maya_Interface(size_t nr_particles){
 	}
 	Maya_Interface::fileEnd = temp2;
 	
-	stringstream ids;
-	ids << "setAttr \".id0\" -type \"doubleArray\" " << nr_particles << " ";
+	stringstream idis;
+	idis << "\tsetAttr \".id0\" -type \"doubleArray\" " << nr_particles << " ";
 	for(int i=0; i<nr_particles;i++){
-		ids << i << " ";
+		idis << i << " ";
 	}
-	ids << ";\n";
+	idis << ";\n";
+	Maya_Interface::ids = idis.str();
 }
 void Maya_Interface::writeToMaya(size_t frameNr, float* x ,float* y, float* z, size_t nr_particles){
 
@@ -48,20 +49,20 @@ void Maya_Interface::writeToMaya(size_t frameNr, float* x ,float* y, float* z, s
     double cube_sizeZ = 10;
     stringstream cube;
   	string cubeInfos1 = string("createNode transform -n \"pCube1\";\n")+
-							string("rename -uid \"649B1D52-4142-B461-C245-F184D43846BB\";\n");
+							string("\trename -uid \"649B1D52-4142-B461-C245-F184D43846BB\";\n");
 	string cubeInfos2 = string("createNode mesh -n \"pCubeShape1\" -p \"pCube1\";\n")+			
-							string("rename -uid \"60008B7B-4CAB-75B2-C86E-43A99298F542\";\n")+
-							string("setAttr -k off \".v\";\n")+
-							string("setAttr \".vir\" yes;\n")+
-							string("setAttr \".vif\" yes;\n")+
-							string("setAttr \".pv\" -type \"double2\" 0.5 0.375 ;\n")+
-							string("setAttr \".uvst[0].uvsn\" -type \"string\" \"map1\";\n")+
-							string("setAttr \".cuvs\" -type \"string\" \"map1\";\n")+
-							string("setAttr \".dcc\" -type \"string\" \"Ambient+Diffuse\";\n")+
-							string("setAttr \".covm[0]\"  0 1 1;\n")+
-							string("setAttr \".cdvm[0]\"  0 1 1;\n")+
-							string("setAttr \".ai_translator\" -type \"string\" \"polymesh\";\n");
-	cube << cubeInfos1 << "setAttr \".s\" -type \"double3\" " << cube_sizeX << " " << cube_sizeY << " " << cube_sizeZ << ";\n" << cubeInfos2;
+							string("\trename -uid \"60008B7B-4CAB-75B2-C86E-43A99298F542\";\n")+
+							string("\tsetAttr -k off \".v\";\n")+
+							string("\tsetAttr \".vir\" yes;\n")+
+							string("\tsetAttr \".vif\" yes;\n")+
+							string("\tsetAttr \".pv\" -type \"double2\" 0.5 0.375 ;\n")+
+							string("\tsetAttr \".uvst[0].uvsn\" -type \"string\" \"map1\";\n")+
+							string("\tsetAttr \".cuvs\" -type \"string\" \"map1\";\n")+
+							string("\tsetAttr \".dcc\" -type \"string\" \"Ambient+Diffuse\";\n")+
+							string("\tsetAttr \".covm[0]\"  0 1 1;\n")+
+							string("\tsetAttr \".cdvm[0]\"  0 1 1;\n")+
+							string("\tsetAttr \".ai_translator\" -type \"string\" \"polymesh\";\n");
+	cube << cubeInfos1 << "\tsetAttr \".s\" -type \"double3\" " << cube_sizeX << " " << cube_sizeY << " " << cube_sizeZ << ";\n" << cubeInfos2;
 
 
   	//Particle infos
@@ -69,28 +70,29 @@ void Maya_Interface::writeToMaya(size_t frameNr, float* x ,float* y, float* z, s
   	double partScaleY = 1;
   	double partScaleZ = 1;
   	string partInfo1 = string("createNode transform -n \"nParticle1\";\n")+
-						string("rename -uid \"287A3003-4FDB-C9D2-628D-23864FCF4CEC\";\n");
+						string("\trename -uid \"287A3003-4FDB-C9D2-628D-23864FCF4CEC\";\n");
 
 	string partInfo2 =	string("createNode nParticle -n \"nParticleShape1\" -p \"nParticle1\";\n")+
-							string("rename -uid \"B44B925C-457C-8339-4764-FBA63FC2DCFD\";\n")+
-							string("addAttr -s false -ci true -sn \"lifespanPP\" -ln \"lifespanPP\" -dt \"doubleArray\";\n")+
-							string("addAttr -ci true -h true -sn \"lifespanPP0\" -ln \"lifespanPP0\" -dt \"doubleArray\";\n")+
-							string("addAttr -ci true -sn \"lifespan\" -ln \"lifespan\" -at \"double\";\n")+
-							string("addAttr -s false -ci true -sn \"rgbPP\" -ln \"rgbPP\" -dt \"vectorArray\";\n")+
-							string("addAttr -ci true -h true -sn \"rgbPP0\" -ln \"rgbPP0\" -dt \"vectorArray\";\n")+
-							string("addAttr -s false -ci true -sn \"opacityPP\" -ln \"opacityPP\" -dt \"doubleArray\";\n")+
-							string("addAttr -ci true -h true -sn \"opacityPP0\" -ln \"opacityPP0\" -dt \"doubleArray\";\n")+
-							string("addAttr -s false -ci true -sn \"radiusPP\" -ln \"radiusPP\" -dt \"doubleArray\";\n")+
-							string("addAttr -ci true -h true -sn \"radiusPP0\" -ln \"radiusPP0\" -dt \"doubleArray\";\n")+
-							string("setAttr -k off \".v\";\n")+
-							string("setAttr \".gf\" -type \"Int32Array\" 0 ;\n");
+							string("\trename -uid \"B44B925C-457C-8339-4764-FBA63FC2DCFD\";\n")+
+							string("\taddAttr -s false -ci true -sn \"lifespanPP\" -ln \"lifespanPP\" -dt \"doubleArray\";\n")+
+							string("\taddAttr -ci true -h true -sn \"lifespanPP0\" -ln \"lifespanPP0\" -dt \"doubleArray\";\n")+
+							string("\taddAttr -ci true -sn \"lifespan\" -ln \"lifespan\" -at \"double\";\n")+
+							string("\taddAttr -s false -ci true -sn \"rgbPP\" -ln \"rgbPP\" -dt \"vectorArray\";\n")+
+							string("\taddAttr -ci true -h true -sn \"rgbPP0\" -ln \"rgbPP0\" -dt \"vectorArray\";\n")+
+							string("\taddAttr -s false -ci true -sn \"opacityPP\" -ln \"opacityPP\" -dt \"doubleArray\";\n")+
+							string("\taddAttr -ci true -h true -sn \"opacityPP0\" -ln \"opacityPP0\" -dt \"doubleArray\";\n")+
+							string("\taddAttr -s false -ci true -sn \"radiusPP\" -ln \"radiusPP\" -dt \"doubleArray\";\n")+
+							string("\taddAttr -ci true -h true -sn \"radiusPP0\" -ln \"radiusPP0\" -dt \"doubleArray\";\n")+
+							string("\tsetAttr -k off \".v\";\n")+
+							string("\tsetAttr \".gf\" -type \"Int32Array\" 0 ;\n");
 	stringstream particuleInfos;
-	particuleInfos << partInfo1 << "setAttr \".s\" -type \"double3\" " << partScaleX << " " << partScaleY << " " << partScaleZ << ";\n" << partInfo2;
+	particuleInfos << "createNode nucleus -n \"nucleus1\";\n" << "\trename -uid \"C11D1C29-44B6-A668-506C-24B574D4BE7C\";\n" << partInfo1 << partInfo2;
+	//particuleInfos << partInfo1 << "\tsetAttr \".s\" -type \"double3\" " << partScaleX << " " << partScaleY << " " << partScaleZ << ";\n" << partInfo2;
 
 
 	//particle positions
   	stringstream positions;
-  	positions << "setAttr \".pos0\" -type \"vectorArray\" " << nr_particles << " ";
+  	positions << "\tsetAttr \".pos0\" -type \"vectorArray\" " << nr_particles << " ";
   	for (int i=0; i<nr_particles; i++){
   		positions  << x[i] << " " << y[i] << " " << z[i] << " ";
   	}
@@ -99,9 +101,10 @@ void Maya_Interface::writeToMaya(size_t frameNr, float* x ,float* y, float* z, s
 
   	//Before end
   	stringstream afterParticles;
-  	afterParticles << "createNode nucleus -n \"nucleus1\";\n" << "rename -uid \"C11D1C29-44B6-A668-506C-24B574D4BE7C\";\n" << "setAttr \".nid\" " << nr_particles <<";\n" << "setAttr \".nid0\" " << nr_particles <<";\n";
+  	afterParticles << "\tsetAttr \".nid\" " << nr_particles <<";\n" << "\tsetAttr \".nid0\" " << nr_particles <<";\n";
 
   	//Write everything to file
-  	mayaFile << header.str() << this->fileStart << cube.str() << particuleInfos.str() << positions.str() << this->ids << afterParticles.str() << this->fileEnd << "// End of frame" << frameNr << ".ma;"; 
+  	mayaFile << header.str() << this->fileStart << cube.str() << particuleInfos.str() << positions.str() << this->ids << afterParticles.str() << this->fileEnd << "\n// End of frame" << frameNr << ".ma;"; 
+  	//mayaFile << this->fileStart;
   	mayaFile.close();
 }
