@@ -11,15 +11,15 @@ int main(int argc, char** argv){
     SimState state;
     state.dt = 1e-3;
     state.g  = 9.8;
-    state.h  = 5e-2;
-    state.k  = 1e3;
-    state.mu = 0.1;
+    state.h  = 0.0625;
+    state.k  = 3.5;
+    state.mu = 3.5;
     state.rho0 = 1000;
     
     Basic_SPH_System bsph(5000,
                           0., 0., 0.,
-                          1., 1., 1.,
-                          state.h * 5, state.h * 5, state.h * 5);
+                          0.5, 0.5, 0.5,
+                          state.h , state.h , state.h );
     bsph.setSimState(state);
     bsph.finilizeInit();
 

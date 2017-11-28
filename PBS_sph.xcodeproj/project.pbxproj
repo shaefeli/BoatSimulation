@@ -58,6 +58,7 @@
 		4B8A27BF1FCCB36200D87BCA /* Uniform_Grid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Uniform_Grid.cpp; sourceTree = "<group>"; };
 		4B8A27C01FCCB36300D87BCA /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4B8A27C11FCCB36300D87BCA /* Vector3T.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vector3T.h; sourceTree = "<group>"; };
+		4B8A27C81FCCEC0000D87BCA /* poisson-disk-sampling */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "poisson-disk-sampling"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,6 +112,7 @@
 		4B8A27B71FCCB34800D87BCA /* PBS_sph */ = {
 			isa = PBXGroup;
 			children = (
+				4B8A27C81FCCEC0000D87BCA /* poisson-disk-sampling */,
 				4B8A27B91FCCB36200D87BCA /* Basic_SPH_System.cpp */,
 				4B8A27BA1FCCB36200D87BCA /* Basic_SPH_System.h */,
 				4B8A27B81FCCB36200D87BCA /* fragment_shader.fs */,
@@ -300,12 +302,13 @@
 			buildSettings = {
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
-				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = (
 					"/usr/local/Cellar/glfw/3.2.1/**",
 					"/usr/local/Cellar/glew/2.1.0/**",
 					"/usr/local/Cellar/glm/0.9.8.5/**",
 					/usr/local/include,
+					"./poisson-disk-sampling/**",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -328,6 +331,7 @@
 					"/usr/local/Cellar/glew/2.1.0/**",
 					"/usr/local/Cellar/glm/0.9.8.5/**",
 					/usr/local/include,
+					"./poisson-disk-sampling/**",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",

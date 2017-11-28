@@ -37,6 +37,8 @@ ENDIF (APPLE)
 include_directories(${GLUT_INCLUDE_DIRS})
 find_package(GLEW REQUIRED)
 
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/poisson-disk-sampling/include")
+
 set( projFiles
 		"main.cpp"
 		"Basic_SPH_System.cpp"

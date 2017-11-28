@@ -3,6 +3,21 @@
 #include <ctime>
 #include <cstdlib>
 #include <math.h>
+#include <thinks/poissonDiskSampling.hpp>
+
+
+template <typename T, std::size_t N>
+class Vec
+{
+public:
+    typedef T value_type;
+    static const std::size_t size = N;
+    Vec() {}
+    T& operator[](std::size_t i) { return _data[i]; }
+    const T& operator[](std::size_t i) const { return _data[i]; }
+private:
+    T _data[N];
+};
 
 Basic_SPH_System::Basic_SPH_System( size_t n_particles,
                                     float b_min_x,//Boundary values
@@ -21,44 +36,58 @@ Basic_SPH_System::Basic_SPH_System( size_t n_particles,
     b_min_x(b_min_x),b_min_y(b_min_y),b_min_z(b_min_z),
     b_max_x(b_max_x),b_max_y(b_max_y),b_max_z(b_max_z)
 {
-    particles.n_particles = n_particles;
-
-    particles.x = (float *)malloc(n_particles*sizeof(float));
-    particles.y = (float *)malloc(n_particles*sizeof(float));
-    particles.z = (float *)malloc(n_particles*sizeof(float));
-
-    particles.vx = (float *)malloc(n_particles*sizeof(float));
-    particles.vy = (float *)malloc(n_particles*sizeof(float));
-    particles.vz = (float *)malloc(n_particles*sizeof(float));
     
-    particles.Fx = (float *)malloc(n_particles*sizeof(float));
-    particles.Fy = (float *)malloc(n_particles*sizeof(float));
-    particles.Fz = (float *)malloc(n_particles*sizeof(float));
-    
-    particles.rho = (float *)malloc(n_particles*sizeof(float));
-
-    particles.p = (float *)malloc(n_particles*sizeof(float));
-
-    for( size_t i = 0; i < n_particles; i++ ) {
-       particles.x[i] = 0.2 + 0.3*(float(rand())/RAND_MAX);
-       particles.y[i] = 0.1  + 0.2*(float(rand())/RAND_MAX);
-       particles.z[i] = 0.2 + 0.3*(float(rand())/RAND_MAX);
-       //printf("Particle position: %f,%f,%f\n",particles.x[i],particles.y[i],particles.z[i]);
-
-       particles.vx[i] = 0.0f; //(float(rand())/RAND_MAX);
-       particles.vy[i] = 0.0f; //(float(rand())/RAND_MAX);
-       particles.vz[i] = 0.0f; //(float(rand())/RAND_MAX);
-    }
 }
 
 void Basic_SPH_System::finilizeInit() {
+
+    Vec<float,3> x_min, x_max;
+    x_min[0] = 0.0f;
+    x_min[1] = 0.0f;
+    x_min[2] = 0.0f;
+    x_max[0] = 0.5;
+    x_max[1] = 0.5;
+    x_max[2] = 0.5;
+    uint32_t max_sample_attempts = 50;
+    uint32_t seed = 1981;
+    std::vector<Vec<float,3>> samples = thinks::poissonDiskSampling(this->simState.h,x_min, x_max,max_sample_attempts, seed);
+    
+    particles.n_particles = samples.size();
+    
+    particles.x = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.y = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.z = (float *)malloc(particles.n_particles*sizeof(float));
+    
+    particles.vx = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.vy = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.vz = (float *)malloc(particles.n_particles*sizeof(float));
+    
+    particles.Fx = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.Fy = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.Fz = (float *)malloc(particles.n_particles*sizeof(float));
+    
+    particles.rho = (float *)malloc(particles.n_particles*sizeof(float));
+    
+    particles.p = (float *)malloc(particles.n_particles*sizeof(float));
+    
+    for( size_t i = 0; i < this->particles.n_particles; i++ ) {
+        particles.x[i] = samples[i][0];
+        particles.y[i] = samples[i][1];
+        particles.z[i] = samples[i][2];
+        //printf("Particle position: %f,%f,%f\n",particles.x[i],particles.y[i],particles.z[i]);
+        
+        particles.vx[i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[i] = 0.0f; //(float(rand())/RAND_MAX);
+    }
+
 
     this->flag_finilized = true;
 }
 
 void Basic_SPH_System::setSimState(SimState state){
     this->simState = state;
-    this->particles.mass = static_cast<float>(4. / 3. * M_PI * pow(state.h, 3));
+    this->particles.mass = 0.2; //static_cast<float>(4. / 3. * M_PI * pow(state.h, 3));
 
 
     /**
@@ -69,11 +98,11 @@ void Basic_SPH_System::setSimState(SimState state){
     this->h3 = pow(state.h, 3);
     this->h2 = pow(state.h, 2);
     
-    this->h9_315 = 315./(64*M_PI*h9);
-    this->h6_15  = 15./(    M_PI * h6);
+    this->h9_315     = 315./(64*M_PI*h9);
+    this->h6_15      = 15./(    M_PI * h6);
     this->h6_15_grad = -45. / ( M_PI * h6);
 
-    this->h3_15  = 15./(2 * M_PI * h3);
+    this->h3_15      = 15./(2 * M_PI * h3);
     this->h3_15_visc = 45./(M_PI * h6);
 
 }
@@ -88,9 +117,9 @@ float Basic_SPH_System::distanceIJ(int i, int j){
 Vector3T<float> Basic_SPH_System::ij_vector(int i, int j) {
 
     return Vector3T<float>(
-            this->particles.x[j] - this->particles.x[i],
-            this->particles.y[j] - this->particles.y[i],
-            this->particles.z[j] - this->particles.z[i]
+            this->particles.x[i] - this->particles.x[j],
+            this->particles.y[i] - this->particles.y[j],
+            this->particles.z[i] - this->particles.z[j]
     );
 }
 
@@ -199,9 +228,11 @@ void Basic_SPH_System::calculate_Densities(){
 void Basic_SPH_System::calculate_Pressures() {
     float rho0 = this->simState.rho0;
     float k = this->simState.k;
+    
     for(int i = 0; i < this->particles.n_particles; i++){
         float rho = this->particles.rho[i];
-        this->particles.p[i] = (float) std::max( (float)(k * (pow(rho / rho0, 7) - 1) ), 0.0f);
+//        this->particles.p[i] = (float) std::max( (float)(k * (pow(rho / rho0, 7) - 1) ), 0.0f);
+        this->particles.p[i] = (float) std::max( (float)(k * (rho - rho0)), 0.0f);
     }
 }
 
@@ -227,7 +258,7 @@ void Basic_SPH_System::calculate_Forces() {
         float F_press_y = 0.0f;
         float F_press_z = 0.0f;
 
-        float F_ext_y = -this->simState.g; // GRAVITY
+        float F_ext_y = - this->particles.mass * this->simState.g; // GRAVITY
 
         float pi = this->particles.p[i];
         float rhoi = this->particles.rho[i];
@@ -243,29 +274,31 @@ void Basic_SPH_System::calculate_Forces() {
                 float pj   = this->particles.p[particleID];
                 float rhoj = this->particles.rho[particleID];
                 float mj   = this->particles.mass;
+                float mi   = mj;
 
                 // Calc Force from pressure
                 Vector3T<float> ijVec = this->ij_vector(i, particleID);
-                float F_p = -this->evalkernel_spiky_gradient(i, particleID, this->simState.h);
-//                F_p *=  mj / rhoi * ( pi /(rhoi * rhoi) + pj / (rhoj * rhoj) );
-                F_p *=  mj * ( pi + pj)/(2*rhoj);
-                F_press_x += F_p * ijVec.x();
-                F_press_y += F_p * ijVec.y();
-                F_press_z += F_p * ijVec.z();
+//                std::cout << "[ " << i << " - " << particleID << " ] = " << sqrt(ijVec.squaredLength()) << std::endl;
+                float gradP =  this->evalkernel_spiky_gradient(i, particleID, this->simState.h);
+                gradP *=  rhoi * mj * ( pi /(rhoi * rhoi) + pj / (rhoj * rhoj) );
+//                F_p *=  mj * ( pi + pj)/(2*rhoj);
+                F_press_x += - mi/rhoi * gradP * ijVec.x();
+                F_press_y += - mi/rhoi * gradP * ijVec.y();
+                F_press_z += - mi/rhoi * gradP * ijVec.z();
 
 
                 // Calc Force from viscosity
-//                float F_visc = this->evalKernel_visc_laplacian(i,j,this->simState.h);
-//                F_visc *= 2 * mj / rhoj;
-//                F_visc_x += F_visc * (this->particles.vx[i] - this->particles.vx[j]);
-//                F_visc_y += F_visc * (this->particles.vy[i] - this->particles.vy[j]);
-//                F_visc_z += F_visc * (this->particles.vz[i] - this->particles.vz[j]);
+                float F_visc = this->simState.mu *this->evalKernel_visc_laplacian(i,j,this->simState.h);
+
+                F_visc_x +=  mi * F_visc / rhoi * (this->particles.vx[j] - this->particles.vx[i]) / rhoj;
+                F_visc_y +=  mi * F_visc / rhoi * (this->particles.vy[j] - this->particles.vy[i]) / rhoj;
+                F_visc_z +=  mi * F_visc / rhoi * (this->particles.vz[j] - this->particles.vz[i]) / rhoj;
             }
         }
         
-        this->particles.Fx[i] = - F_press_x  + this->simState.mu * F_visc_x;
-        this->particles.Fy[i] = - F_press_y  + this->simState.mu * F_visc_y + F_ext_y;
-        this->particles.Fz[i] = - F_press_z  + this->simState.mu * F_visc_z;
+        this->particles.Fx[i] = F_press_x  +  F_visc_x;
+        this->particles.Fy[i] = F_press_y  +  F_visc_y + F_ext_y;
+        this->particles.Fz[i] = F_press_z  +  F_visc_z;
 
 //        / rhoi
 //        / rhoi
@@ -332,14 +365,14 @@ void Basic_SPH_System::run_step(float dt)
          * If trying to escape - return and set velocity to 0.
          * Sort of - No-Slip boundary condition .
          */
-        if (this->particles.x[i] < 0 ) { particles.x[i] = 0.0f; particles.vx[i] = 0.0f; }
-        if (this->particles.x[i] > 1)  { particles.x[i] = 1.0; particles.vx[i]  = 0.0f; }
+        if (this->particles.x[i] < 0 ) {        particles.x[i] = 0.0f; particles.vx[i] = 0.0f; }
+        if (this->particles.x[i] > b_max_x )  { particles.x[i] = b_max_x; particles.vx[i]  = 0.0f; }
 
-        if (this->particles.y[i] < 0 ) { particles.y[i] = 0.0f; particles.vy[i] *= -0.75; }
-        if (this->particles.y[i] > 1)  { particles.y[i] = 1.0;  particles.vy[i] *= -0.75; }
+        if (this->particles.y[i] < 0 ) {       particles.y[i] = 0.0f;     particles.vy[i] = 0.; }
+        if (this->particles.y[i] > b_max_y)  { particles.y[i] = b_max_y;  particles.vy[i] = 0.; }
 
-        if (this->particles.z[i] < 0 ) { particles.z[i] = 0.0f; particles.vz[i] = 0.0f; }
-        if (this->particles.z[i] > 1)  { particles.z[i] = 1.0;  particles.vz[i] = 0.0f; }
+        if (this->particles.z[i] < 0 ) {       particles.z[i] = 0.0f; particles.vz[i] = 0.0f; }
+        if (this->particles.z[i] > b_max_z)  { particles.z[i] = b_max_z;  particles.vz[i] = 0.0f; }
     }
 }
 
