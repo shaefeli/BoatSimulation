@@ -1,7 +1,9 @@
 #lookAtThis: main.cpp SPH_system.h	
 #	g++ -o lookAtThis main.cpp -lglut -lGL -lGLU
-LIBRARIES=  -lglfw -lGLEW -lglut -lGL -lGLU
+LIBRARIES=  -lglfw -lGLEW -lglut -lGL -lGLU -Ipoisson-disk-sampling/include
 #COMPILER_FLAGS = -Wall -pedantic
+COMPILER_FLAGS = -O2
+
 
 all: main.o Basic_SPH_System.o OpenGL_Renderer.o Uniform_Grid.o
 	g++ -o toRun main.o Basic_SPH_System.o OpenGL_Renderer.o Uniform_Grid.o $(COMPILER_FLAGS) $(LIBRARIES)
