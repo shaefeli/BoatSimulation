@@ -7,9 +7,10 @@
 #include <GL/glut.h>
 #include <cstddef>
 #include "Uniform_Grid.h"
+#include "viridis.h"
 
 
-//enum Render_Mode = { NEIGHBORS, GRID, SPEED, FORCE, DENSITY, NONE };
+typedef enum { NONE, NEIGHBORS, GRID, SPEED, FORCE, DENSITY, PRESSURE } Render_mode;
 
 
 class OpenGL_Renderer
@@ -40,7 +41,7 @@ class OpenGL_Renderer
     float *interleaved_buffer;
     float *color_buffer;
 
-    //Render_mode render_mode = NONE;
+    Render_mode render_mode = NONE;
 
     public:
     
@@ -49,6 +50,18 @@ class OpenGL_Renderer
                             const float *x;
                             const float *y;
                             const float *z;
+
+                            const float *vx;
+                            const float *vy;
+                            const float *vz;
+
+                            const float *Fx;
+                            const float *Fy;
+                            const float *Fz;
+                            
+                            const float *rho;   //density
+                            const float *p;     //pressure
+
         } rendering_info_t;
        
         OpenGL_Renderer();
@@ -65,6 +78,8 @@ class OpenGL_Renderer
         //Function to set the color according to parameter
         void set_grid_color();
         void set_neighbor_color( size_t particle_index );
+        void set_density_color();
+        void set_pressure_color();
 
         void reshape(int x, int y);
         

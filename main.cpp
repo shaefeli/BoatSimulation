@@ -30,6 +30,18 @@ int main(int argc, char** argv){
     renderer.render_info.y = bsph.particles.y;
     renderer.render_info.z = bsph.particles.z;
 
+    renderer.render_info.vx = bsph.particles.vx;
+    renderer.render_info.vy = bsph.particles.vy;
+    renderer.render_info.vz = bsph.particles.vz;
+
+    renderer.render_info.Fx = bsph.particles.Fx;
+    renderer.render_info.Fy = bsph.particles.Fy;
+    renderer.render_info.Fz = bsph.particles.Fz;
+
+    renderer.render_info.rho = bsph.particles.rho;
+
+    renderer.render_info.p = bsph.particles.p;
+
     renderer.set_grid( &bsph.uniform_grid );
 
     renderer.init(argc,argv);

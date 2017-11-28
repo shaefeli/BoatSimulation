@@ -8,13 +8,34 @@
 
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    Render_mode *rm = (Render_mode *)glfwGetWindowUserPointer(window);
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, GL_TRUE);
     } 
-    else if (key == GLFW_KEY_1 && action == GLFW_PRESS)
+    else if ( rm != NULL && key == GLFW_KEY_1 && action == GLFW_PRESS)
     {
-        
+        *rm = NONE;
+    }
+    else if ( rm != NULL && key == GLFW_KEY_2 && action == GLFW_PRESS)
+    {
+        *rm = NEIGHBORS;
+    }
+    else if ( rm != NULL && key == GLFW_KEY_3 && action == GLFW_PRESS)
+    {
+        *rm = GRID;
+    }
+    else if ( rm != NULL && key == GLFW_KEY_4 && action == GLFW_PRESS)
+    {
+        *rm = FORCE;
+    }
+    else if ( rm != NULL && key == GLFW_KEY_5 && action == GLFW_PRESS)
+    {
+        *rm = DENSITY;
+    }
+    else if ( rm != NULL && key == GLFW_KEY_6 && action == GLFW_PRESS)
+    {
+        *rm = PRESSURE;
     }
 }
 
@@ -127,7 +148,6 @@ bool OpenGL_Renderer::init( int argc, char** argv)
                 return false;
     }
 
-
     //glfwWindowHint(GLFW_SAMPLES, 4);//Antialiasing
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -151,6 +171,7 @@ bool OpenGL_Renderer::init( int argc, char** argv)
     
     // Set the keyboard callback so that when we press ESC, it knows what to do.
     glfwSetKeyCallback(window, key_callback);
+    glfwSetWindowUserPointer(this->window,(void *)&(this->render_mode));
 
     programID = LoadShaders("./vertex_shader.vs","./fragment_shader.fs");
     glUseProgram(programID);
@@ -330,6 +351,7 @@ void OpenGL_Renderer::draw()
 
 	glfwSwapBuffers(window);
     glfwPollEvents();
+    std::cout<<render_mode<<std::endl;
 }
 
 void OpenGL_Renderer::draw_box()
@@ -400,14 +422,37 @@ void OpenGL_Renderer::draw_particles( )
         0,
         (void*)0
     );
-
+    //glfwSetWindowUserPointer
     
     //glEnableVertexArrayAttrib(particles_VAO,1);
     glEnableVertexAttribArray(1);
 	glBindBuffer(GL_ARRAY_BUFFER, colors_VBO);
 
+
+    //Set the color depending on the render mode
+    switch(this->render_mode) {
+        case NEIGHBORS:
+            set_neighbor_color(0);
+            break;
+        case GRID:
+            set_grid_color();
+            break;
+        case SPEED:
+            break;
+        case FORCE:
+            break;
+        case DENSITY:
+            set_density_color();
+            break;
+        case PRESSURE:
+            set_pressure_color();
+            break;
+        default:
+
+            break;
+    }
     //set_grid_color();
-    set_neighbor_color(0);
+    //set_neighbor_color(0);
 
     glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), color_buffer, GL_STATIC_DRAW);
  
@@ -446,18 +491,14 @@ void OpenGL_Renderer::reshape(int x, int y)
 void OpenGL_Renderer::set_grid_color()
 {
     size_t nparticles = render_info.n_particles;
-    Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
+    //Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
     for( size_t i = 0; i < nparticles; i++ ) {
         size_t gi,gj,gk;
-        ug.query_cell(render_info.x[i],render_info.y[i],render_info.z[i],gi,gj,gk);
-        //printf("grid positions: %lu %lu %lu\n",gi,gj,gk);
-        //printf("cell numbers: %lu %lu %lu\n",ug.n_cells_x, ug.n_cells_y, ug.n_cells_z);
-        //printf("colors: %f %f %f\n",float(gi)/ug.n_cells_x,float(gj)/ug.n_cells_y,float(gk)/ug.n_cells_z);
-        color_buffer[3*i]   = float(gi)/ug.n_cells_x;
-        color_buffer[3*i+1] = float(gj)/ug.n_cells_y;
-        color_buffer[3*i+2] = float(gk)/ug.n_cells_z;
+        ug->query_cell(render_info.x[i],render_info.y[i],render_info.z[i],gi,gj,gk);
+        color_buffer[3*i]   = float(gi)/ug->n_cells_x;
+        color_buffer[3*i+1] = float(gj)/ug->n_cells_y;
+        color_buffer[3*i+2] = float(gk)/ug->n_cells_z;
     }
-
 }
 
 
@@ -491,16 +532,8 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
         assert(neighbor_cells[i] < ug->n_cells);
         size_t *cell = ug->cells[neighbor_cells[i]];
         size_t cell_size = ug->cell_size[neighbor_cells[i]];
-        //std::cerr<<"nneigbors:"<<neighbor_cells.size()<<std::endl;
-        //std::cerr<<"drawing colors"<<std::endl;
         for( int j = 0; j < cell_size; j++ ) {
             size_t particle_pos = cell[j];
-            //std::cerr<<"Particle position: "<<particle_pos<<std::endl;
-            //std::cerr<<"cell number: "<<neighbor_cells[i]<<std::endl;
-            //std::cerr<<"ncells: "<<ug.n_cells<<std::endl;
-            //std::cerr<<"Cell_size: "<<ug.cell_size[i]<<std::endl;
-            //std::cerr<<"access_position: "<<j<<std::endl;
-            //std::cerr<<std::endl;
             if( alternate == 0 ) {
                 color_buffer[3*particle_pos]   = 1.;
                 color_buffer[3*particle_pos+1] = 0.;
@@ -516,7 +549,6 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
             }
         }
         alternate = (alternate+1)%2;
-        //std::cerr<<"colors drawn"<<std::endl;
     }
     color_buffer[3*particle_index]   = 1.;
     color_buffer[3*particle_index+1] = 1.;
@@ -528,6 +560,43 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
 
 
 
+void OpenGL_Renderer::set_density_color()
+{
+    double min = 2000.;
+    double max = 3500.;
+    size_t nparticles = render_info.n_particles;
+    for( size_t i = 0; i < nparticles; i++ ) {
+        //std::cout<<(render_info.rho[i]-min)/(max-min)<<std::endl;
+        //std::cout<<render_info.rho[i]<<std::endl;
+        float val = std::max(0.,std::min(1.,(render_info.rho[i]-min)/(max-min)));
+        int index = val*256.;
+        //std::cout<<val<<std::endl;
+        //std::cout<<index<<std::endl;
+        color_buffer[3*i]   = viridis_data[index][0];
+        color_buffer[3*i+1] = viridis_data[index][1];
+        color_buffer[3*i+2] = viridis_data[index][2];
+    }
+}
+
+
+void OpenGL_Renderer::set_pressure_color()
+{
+    double min = 5000.;
+    double max = 15000.;
+    size_t nparticles = render_info.n_particles;
+    for( size_t i = 0; i < nparticles; i++ ) {
+        //std::cout<<render_info.p[i]<<std::endl;
+        //std::cout<<(render_info.p[i]-min)/(max-min)<<std::endl;
+        //std::cout<<render_info.p[i]<<std::endl;
+        float val = std::max(0.,std::min(1.,(render_info.p[i]-min)/(max-min)));
+        int index = val*256.;
+        //std::cout<<val<<std::endl;
+        //std::cout<<index<<std::endl;
+        color_buffer[3*i]   = viridis_data[index][0];
+        color_buffer[3*i+1] = viridis_data[index][1];
+        color_buffer[3*i+2] = viridis_data[index][2];
+    }
+}
 
 
 
