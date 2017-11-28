@@ -9,7 +9,7 @@ int main(int argc, char** argv){
 
     
     SimState state;
-    state.dt = 1e-3;
+    state.dt = 5e-4;
     state.g  = 9.8;
     state.h  = 0.0625;
     state.k  = 3.5;
@@ -18,7 +18,7 @@ int main(int argc, char** argv){
     
     Basic_SPH_System bsph(5000,
                           0., 0., 0.,
-                          0.5, 0.5, 0.5,
+                          0.5, .5, .5,
                           state.h , state.h , state.h );
     bsph.setSimState(state);
     bsph.finilizeInit();

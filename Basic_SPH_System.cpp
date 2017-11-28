@@ -46,11 +46,11 @@ void Basic_SPH_System::finilizeInit() {
     x_min[1] = 0.0f;
     x_min[2] = 0.0f;
     x_max[0] = 0.5;
-    x_max[1] = 0.5;
+    x_max[1] = 0.2;
     x_max[2] = 0.5;
-    uint32_t max_sample_attempts = 50;
+    uint32_t max_sample_attempts = 30;
     uint32_t seed = 1981;
-    std::vector<Vec<float,3>> samples = thinks::poissonDiskSampling(this->simState.h,x_min, x_max,max_sample_attempts, seed);
+    std::vector<Vec<float,3>> samples = thinks::poissonDiskSampling(this->simState.h*0.7,x_min, x_max,max_sample_attempts, seed);
     
     particles.n_particles = samples.size();
     
@@ -231,8 +231,8 @@ void Basic_SPH_System::calculate_Pressures() {
     
     for(int i = 0; i < this->particles.n_particles; i++){
         float rho = this->particles.rho[i];
-//        this->particles.p[i] = (float) std::max( (float)(k * (pow(rho / rho0, 7) - 1) ), 0.0f);
-        this->particles.p[i] = (float) std::max( (float)(k * (rho - rho0)), 0.0f);
+        this->particles.p[i] = (float) std::max( (float)(k * (pow(rho / rho0, 7) - 1) ), 0.0f);
+//        this->particles.p[i] = (float) std::max( (float)(k * (rho - rho0)), 0.0f);
     }
 }
 
@@ -365,13 +365,13 @@ void Basic_SPH_System::run_step(float dt)
          * If trying to escape - return and set velocity to 0.
          * Sort of - No-Slip boundary condition .
          */
-        if (this->particles.x[i] < 0 ) {        particles.x[i] = 0.0f; particles.vx[i] = 0.0f; }
+        if (this->particles.x[i] < 0 ) {        particles.x[i] = 0.0001f; particles.vx[i] = 0.0f; }
         if (this->particles.x[i] > b_max_x )  { particles.x[i] = b_max_x; particles.vx[i]  = 0.0f; }
 
-        if (this->particles.y[i] < 0 ) {       particles.y[i] = 0.0f;     particles.vy[i] = 0.; }
+        if (this->particles.y[i] < 0 ) {       particles.y[i] = 0.0001f;     particles.vy[i] = 0.; }
         if (this->particles.y[i] > b_max_y)  { particles.y[i] = b_max_y;  particles.vy[i] = 0.; }
 
-        if (this->particles.z[i] < 0 ) {       particles.z[i] = 0.0f; particles.vz[i] = 0.0f; }
+        if (this->particles.z[i] < 0 ) {       particles.z[i] = 0.0001f; particles.vz[i] = 0.0f; }
         if (this->particles.z[i] > b_max_z)  { particles.z[i] = b_max_z;  particles.vz[i] = 0.0f; }
     }
 }
