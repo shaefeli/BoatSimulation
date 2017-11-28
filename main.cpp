@@ -1,8 +1,6 @@
-#include "Basic_SPH_System.h"
 #include "OpenGL_Renderer.h"
-#include "unistd.h"
-#include <iostream>
-#define nr_particles 2
+#include "Basic_SPH_System.h"
+
 
 
 int main(int argc, char** argv){
