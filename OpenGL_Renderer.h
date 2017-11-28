@@ -1,3 +1,5 @@
+#ifndef _PBS_OPENGL_RENDERER_
+#define _PBS_OPENGL_RENDERER_
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -6,11 +8,9 @@
 #include <cstddef>
 #include "Uniform_Grid.h"
 
-#ifndef _PBS_OPENGL_RENDERER_
-#define _PBS_OPENGL_RENDERER_
 
+//enum Render_Mode = { NEIGHBORS, GRID, SPEED, FORCE, DENSITY, NONE };
 
-enum Render_Mode { NEIGHBORS, GRID, SPEED, FORCE, DENSITY, NONE };
 
 class OpenGL_Renderer
 {
@@ -40,7 +40,7 @@ class OpenGL_Renderer
     float *interleaved_buffer;
     float *color_buffer;
 
-    Render_mode render_mode = NONE;
+    //Render_mode render_mode = NONE;
 
     public:
     
