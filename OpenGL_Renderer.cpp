@@ -11,6 +11,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, GL_TRUE);
+    } 
+    else if (key == GLFW_KEY_1 && action == GLFW_PRESS)
+    {
+        
     }
 }
 
@@ -116,7 +120,7 @@ OpenGL_Renderer::OpenGL_Renderer() : ug(NULL)
 
 bool OpenGL_Renderer::init( int argc, char** argv)
 {
-    
+    glutInit(&argc,argv);
     if( !glfwInit() )
     {
             fprintf( stderr, "Failed to initialize GLFW\n" );
@@ -313,7 +317,7 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 
 
 //We don't wanna modify
-void OpenGL_Renderer::draw( )
+void OpenGL_Renderer::draw()
 {
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -415,7 +419,7 @@ void OpenGL_Renderer::draw_particles( )
         0,
         (void*)0
     );
-
+    
 
     glDrawArrays(GL_POINTS, 0, nparticles*3);
 
