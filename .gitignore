@@ -7,4 +7,6 @@ CMakeFiles/*
 *.cbp
 
 bin/
-*.xcodeproj
+PBS_sph.xcodeproj/
+CMakeLists.txt
+Makefile
