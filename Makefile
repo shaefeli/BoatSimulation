@@ -2,7 +2,6 @@ LIBRARIES=  -lglfw -lGLEW -lglut -lGL -lGLU
 #COMPILER_FLAGS = -Wall -pedantic
 COMPILER_FLAGS = -O2 -std=c++11
 
-
 all: main.o Basic_SPH_System.o OpenGL_Renderer.o Uniform_Grid.o viridis.o Maya_Interface.o
 	g++ -o pbs_sim main.o viridis.o Basic_SPH_System.o OpenGL_Renderer.o Uniform_Grid.o Maya_Interface.o $(COMPILER_FLAGS) $(LIBRARIES)
 main.o: main.cpp

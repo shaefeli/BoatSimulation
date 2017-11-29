@@ -52,7 +52,7 @@ int main(int argc, char** argv){
         std::cout << "[" << it * state.dt << "] sec\n";
         //std::cout<<"iteration "<<it<<std::endl;
 //        usleep(10000);
-        if(it == 0 || it==1 || it==2){
+        if(it > 300 && it < 400){
             maya.writeToMaya(it,bsph.particles.x,bsph.particles.y,bsph.particles.z, bsph.particles.n_particles);
         } 
         bsph.run_step( state.dt );
