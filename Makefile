@@ -20,3 +20,4 @@ Maya_Interface.o: Maya_Interface.cpp Maya_Interface.h
 clean:
 	rm -rf *.o
 	rm pbs_sim
+	rm frameFiles/*
