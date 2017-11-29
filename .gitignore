@@ -1,0 +1,12 @@
+.idea/*
+.DS_Store
+CMakeCache.txt
+
+CMakeFiles/*
+*.cmake
+*.cbp
+
+bin/
+PBS_sph.xcodeproj/
+CMakeLists.txt
+Makefile

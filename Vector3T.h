@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <assert.h>
 
+using namespace std;
 // Simple 3D vector class
 template<typename T>
 class Vector3T
@@ -187,7 +188,7 @@ public:
 
 	T norm() const {
 		return length();
-	}
+}
 
 	T squaredLength() const
 	{
