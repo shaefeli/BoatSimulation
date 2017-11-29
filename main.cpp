@@ -51,12 +51,13 @@ int main(int argc, char** argv){
 
     renderer.init(argc,argv);
     unsigned int it=0;
+    bool render = false;
 
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << it * state.dt << "] sec\n";
         //std::cout<<"iteration "<<it<<std::endl;
-        //usleep(1000);
-        if(it == 0 || it==1 || it==2){
+//        usleep(10000);
+        if(render and it > 300 && it < 400){
             maya.writeToMaya(it,bsph.particles.x,bsph.particles.y,bsph.particles.z, bsph.particles.n_liquid_particles);
         } 
         bsph.run_step( state.dt );
