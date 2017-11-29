@@ -16,9 +16,9 @@ int main(int argc, char** argv){
     state.mu = 3.5;
     state.rho0 = 1000;
     
-    Basic_SPH_System bsph(5000,
+    Basic_SPH_System bsph(
                           0., 0., 0.,
-                          0.5, .5, .5,
+                          1., 1., 1.,
                           state.h , state.h , state.h );
     bsph.setSimState(state);
     bsph.finilizeInit();
@@ -26,7 +26,8 @@ int main(int argc, char** argv){
     OpenGL_Renderer renderer;
     Maya_Interface maya(5000);
 
-    renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
+    //renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
+    renderer.render_info.n_liquid_particles = bsph.particles.n_total_particles;
     renderer.render_info.x = bsph.particles.x;
     renderer.render_info.y = bsph.particles.y;
     renderer.render_info.z = bsph.particles.z;

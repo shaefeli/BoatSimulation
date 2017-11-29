@@ -16,9 +16,13 @@ typedef struct {
 } SimState;
 
 
-typedef struct {
-    size_t n_liquid_particles;
-    //size_t boundary_particles;
+typedef struct {                    //particles of this type have index:
+    size_t n_liquid_particles;      //[0..n_liquid_particles]
+    size_t n_boundary_particles;    //[n_liquid_particles..n_boundary_particles]
+    size_t n_mobile_particles;      //[n_boundary_particles
+                                    //  + n_liquid_particles..n_mobile_particles] 
+    size_t n_total_particles;
+
     //Position
     float *x;
     float *y;
@@ -102,7 +106,7 @@ public:
     particle_information_t particles;
     
     
-    Basic_SPH_System(   size_t n_liquid_particles,
+    Basic_SPH_System(
                         float b_min_x,          //Boundary values
                         float b_min_y,
                         float b_min_z,

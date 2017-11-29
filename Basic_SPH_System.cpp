@@ -19,7 +19,7 @@ private:
     T _data[N];
 };
 
-Basic_SPH_System::Basic_SPH_System( size_t n_liquid_particles,
+Basic_SPH_System::Basic_SPH_System(
                                     float b_min_x,//Boundary values
                                     float b_min_y,
                                     float b_min_z,
@@ -41,6 +41,7 @@ Basic_SPH_System::Basic_SPH_System( size_t n_liquid_particles,
 
 void Basic_SPH_System::finilizeInit() {
 
+    //Initialize the liquid particles by sampling
     Vec<float,3> x_min, x_max;
     x_min[0] = 0.0f;
     x_min[1] = 0.0f;
@@ -50,36 +51,133 @@ void Basic_SPH_System::finilizeInit() {
     x_max[2] = 0.5;
     uint32_t max_sample_attempts = 30;
     uint32_t seed = 1981;
-    std::vector<Vec<float,3>> samples = thinks::poissonDiskSampling(this->simState.h*0.7,x_min, x_max,max_sample_attempts, seed);
+    std::vector<Vec<float,3>> liquid_samples = thinks::poissonDiskSampling(this->simState.h*0.7,x_min, x_max,max_sample_attempts, seed);
+
+    particles.n_liquid_particles = liquid_samples.size();
+
+    //Initialize the boudaries by sampling too. Have to do it for the three planes
+    float sampling_distance_boundary = 0.5;
+    //XY
+    Vec<float,2> b_min_xy, b_max_xy;
+    b_min_xy[0] = b_min_x;
+    b_min_xy[1] = b_min_y;
+    b_max_xy[0] = b_max_x;
+    b_max_xy[1] = b_max_y;
+    std::vector<Vec<float,2>> b_samples_xy = thinks::poissonDiskSampling(this->simState.h*sampling_distance_boundary, b_min_xy, b_max_xy, max_sample_attempts, seed);
+
+    //XZ
+    Vec<float,2> b_min_xz, b_max_xz;
+    b_min_xz[0] = b_min_x;
+    b_min_xz[1] = b_min_z;
+    b_max_xz[0] = b_max_x;
+    b_max_xz[1] = b_max_z;
+    std::vector<Vec<float,2>> b_samples_xz = thinks::poissonDiskSampling(this->simState.h*sampling_distance_boundary, b_min_xz, b_max_xz, max_sample_attempts, seed);
+
+    //YZ
+    Vec<float,2> b_min_yz, b_max_yz;
+    b_min_yz[0] = b_min_y;
+    b_min_yz[1] = b_min_z;
+    b_max_yz[0] = b_max_y;
+    b_max_yz[1] = b_max_z;
+    std::vector<Vec<float,2>> b_samples_yz = thinks::poissonDiskSampling(this->simState.h*sampling_distance_boundary, b_min_yz, b_max_yz, max_sample_attempts, seed);
+
+    particles.n_boundary_particles = 2*(b_samples_xy.size() + b_samples_xz.size() + b_samples_yz.size() );
+
+
+    //Initialize the movable particle object
+    particles.n_mobile_particles = 0;
+   
+
+
+    //Reserve memory for all the particles
+    particles.n_total_particles = particles.n_liquid_particles + particles.n_boundary_particles + particles.n_mobile_particles;
     
-    particles.n_liquid_particles = samples.size();
+    particles.x = (float *)malloc(particles.n_total_particles*sizeof(float));
+    particles.y = (float *)malloc(particles.n_total_particles*sizeof(float));
+    particles.z = (float *)malloc(particles.n_total_particles*sizeof(float));
     
-    particles.x = (float *)malloc(particles.n_liquid_particles*sizeof(float));
-    particles.y = (float *)malloc(particles.n_liquid_particles*sizeof(float));
-    particles.z = (float *)malloc(particles.n_liquid_particles*sizeof(float));
+    particles.vx = (float *)malloc(particles.n_total_particles*sizeof(float));
+    particles.vy = (float *)malloc(particles.n_total_particles*sizeof(float));
+    particles.vz = (float *)malloc(particles.n_total_particles*sizeof(float));
     
-    particles.vx = (float *)malloc(particles.n_liquid_particles*sizeof(float));
-    particles.vy = (float *)malloc(particles.n_liquid_particles*sizeof(float));
-    particles.vz = (float *)malloc(particles.n_liquid_particles*sizeof(float));
+    particles.Fx = (float *)malloc(particles.n_total_particles*sizeof(float));
+    particles.Fy = (float *)malloc(particles.n_total_particles*sizeof(float));
+    particles.Fz = (float *)malloc(particles.n_total_particles*sizeof(float));
     
-    particles.Fx = (float *)malloc(particles.n_liquid_particles*sizeof(float));
-    particles.Fy = (float *)malloc(particles.n_liquid_particles*sizeof(float));
-    particles.Fz = (float *)malloc(particles.n_liquid_particles*sizeof(float));
+    particles.rho = (float *)malloc(particles.n_total_particles*sizeof(float));
     
-    particles.rho = (float *)malloc(particles.n_liquid_particles*sizeof(float));
+    particles.p = (float *)malloc(particles.n_total_particles*sizeof(float));
     
-    particles.p = (float *)malloc(particles.n_liquid_particles*sizeof(float));
-    
+
+    //Initialize the liquid particles
     for( size_t i = 0; i < this->particles.n_liquid_particles; i++ ) {
-        particles.x[i] = samples[i][0];
-        particles.y[i] = samples[i][1];
-        particles.z[i] = samples[i][2];
+        particles.x[i] = liquid_samples[i][0];
+        particles.y[i] = liquid_samples[i][1];
+        particles.z[i] = liquid_samples[i][2];
         //printf("Particle position: %f,%f,%f\n",particles.x[i],particles.y[i],particles.z[i]);
         
         particles.vx[i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vy[i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vz[i] = 0.0f; //(float(rand())/RAND_MAX);
     }
+
+    //Initialize the boundary particles
+    size_t offset = 0;
+    for( size_t i = 0; i < b_samples_xy.size(); i++ ) { //XY plane faces
+        particles.x[particles.n_liquid_particles                        + i] = b_samples_xy[i][0];
+        particles.y[particles.n_liquid_particles                        + i] = b_samples_xy[i][1];
+        particles.z[particles.n_liquid_particles                        + i] = b_min_z;
+        
+        particles.vx[particles.n_liquid_particles                       + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_liquid_particles                       + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_liquid_particles                       + i] = 0.0f; //(float(rand())/RAND_MAX);
+
+        particles.x[particles.n_liquid_particles  + b_samples_xy.size() + i] = b_samples_xy[i][0];
+        particles.y[particles.n_liquid_particles  + b_samples_xy.size() + i] = b_samples_xy[i][1];
+        particles.z[particles.n_liquid_particles  + b_samples_xy.size() + i] = b_max_z;
+        
+        particles.vx[particles.n_liquid_particles + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_liquid_particles + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_liquid_particles + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+    }
+    offset += 2*b_samples_xy.size();
+
+    for( size_t i = 0; i < b_samples_xz.size(); i++ ) { //XY plane faces
+        particles.x[particles.n_liquid_particles                        + offset + i] = b_samples_xz[i][0];
+        particles.y[particles.n_liquid_particles                        + offset + i] = b_min_y;
+        particles.z[particles.n_liquid_particles                        + offset + i] = b_samples_xz[i][1];
+        
+        particles.vx[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+
+        particles.x[particles.n_liquid_particles  + b_samples_xz.size() + offset + i] = b_samples_xy[i][0];
+        particles.y[particles.n_liquid_particles  + b_samples_xz.size() + offset + i] = b_max_y;
+        particles.z[particles.n_liquid_particles  + b_samples_xz.size() + offset + i] = b_samples_xy[i][1];;
+        
+        particles.vx[particles.n_liquid_particles + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_liquid_particles + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_liquid_particles + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+    }
+    offset += 2*b_samples_xz.size();
+    for( size_t i = 0; i < b_samples_yz.size(); i++ ) { //XY plane faces
+        particles.x[particles.n_liquid_particles                        + offset + i] = b_min_x;
+        particles.y[particles.n_liquid_particles                        + offset + i] = b_samples_yz[i][0];
+        particles.z[particles.n_liquid_particles                        + offset + i] = b_samples_yz[i][1];
+        
+        particles.vx[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+
+        particles.x[particles.n_liquid_particles  + b_samples_yz.size() + offset + i] = b_min_x;
+        particles.y[particles.n_liquid_particles  + b_samples_yz.size() + offset + i] = b_samples_yz[i][0];
+        particles.z[particles.n_liquid_particles  + b_samples_yz.size() + offset + i] = b_samples_yz[i][1];
+        
+        particles.vx[particles.n_liquid_particles + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_liquid_particles + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_liquid_particles + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+    }
+    //Initialize the mobile particles
 
 
     this->flag_finilized = true;
