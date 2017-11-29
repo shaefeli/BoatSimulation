@@ -17,7 +17,8 @@ typedef struct {
 
 
 typedef struct {
-    size_t n_particles;
+    size_t n_liquid_particles;
+    //size_t boundary_particles;
     //Position
     float *x;
     float *y;
@@ -101,7 +102,7 @@ public:
     particle_information_t particles;
     
     
-    Basic_SPH_System(   size_t n_particles,
+    Basic_SPH_System(   size_t n_liquid_particles,
                         float b_min_x,          //Boundary values
                         float b_min_y,
                         float b_min_z,

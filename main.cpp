@@ -26,7 +26,7 @@ int main(int argc, char** argv){
     OpenGL_Renderer renderer;
     Maya_Interface maya(5000);
 
-    renderer.render_info.n_particles = bsph.particles.n_particles;
+    renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
     renderer.render_info.x = bsph.particles.x;
     renderer.render_info.y = bsph.particles.y;
     renderer.render_info.z = bsph.particles.z;
@@ -53,7 +53,7 @@ int main(int argc, char** argv){
         //std::cout<<"iteration "<<it<<std::endl;
 //        usleep(10000);
         if(it == 0 || it==1 || it==2){
-            maya.writeToMaya(it,bsph.particles.x,bsph.particles.y,bsph.particles.z, bsph.particles.n_particles);
+            maya.writeToMaya(it,bsph.particles.x,bsph.particles.y,bsph.particles.z, bsph.particles.n_liquid_particles);
         } 
         bsph.run_step( state.dt );
         renderer.draw();

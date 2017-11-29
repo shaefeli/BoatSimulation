@@ -52,7 +52,7 @@ class OpenGL_Renderer
     public:
     
         typedef struct {
-                            size_t n_particles;
+                            size_t n_liquid_particles;
                             const float *x;
                             const float *y;
                             const float *z;

@@ -306,8 +306,8 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 	glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
 
     
-    size_t nparticles = render_info.n_particles;
-    printf("n_particles: %lu\n",nparticles);
+    size_t nparticles = render_info.n_liquid_particles;
+    printf("n_liquid_particles: %lu\n",nparticles);
     //nparticles = 5;
 
     //float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
@@ -404,7 +404,7 @@ void OpenGL_Renderer::draw_particles( )
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
 
-    size_t nparticles = render_info.n_particles;
+    size_t nparticles = render_info.n_liquid_particles;
     //float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
     for( int i = 0; i < nparticles; i++ ) {
         interleaved_buffer[i*3 + 0] = render_info.x[i];
@@ -490,7 +490,7 @@ void OpenGL_Renderer::reshape(int x, int y)
 
 void OpenGL_Renderer::set_grid_color()
 {
-    size_t nparticles = render_info.n_particles;
+    size_t nparticles = render_info.n_liquid_particles;
     //Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
     for( size_t i = 0; i < nparticles; i++ ) {
         size_t gi,gj,gk;
@@ -510,10 +510,10 @@ void OpenGL_Renderer::set_grid( Uniform_Grid *ug )
 void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
 {
     //Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
-    //ug.build(render_info.x,render_info.y,render_info.z,render_info.n_particles);
+    //ug.build(render_info.x,render_info.y,render_info.z,render_info.n_liquid_particles);
    
 
-    for( size_t i = 0; i < render_info.n_particles; i++ ) {
+    for( size_t i = 0; i < render_info.n_liquid_particles; i++ ) {
         color_buffer[3*i]   = 0.;
         color_buffer[3*i+1] = 0.;
         color_buffer[3*i+2] = 1.;
@@ -564,7 +564,7 @@ void OpenGL_Renderer::set_density_color()
 {
     double min = 2000.;
     double max = 3500.;
-    size_t nparticles = render_info.n_particles;
+    size_t nparticles = render_info.n_liquid_particles;
     for( size_t i = 0; i < nparticles; i++ ) {
         //std::cout<<(render_info.rho[i]-min)/(max-min)<<std::endl;
         //std::cout<<render_info.rho[i]<<std::endl;
@@ -583,7 +583,7 @@ void OpenGL_Renderer::set_pressure_color()
 {
     double min = 5000.;
     double max = 15000.;
-    size_t nparticles = render_info.n_particles;
+    size_t nparticles = render_info.n_liquid_particles;
     for( size_t i = 0; i < nparticles; i++ ) {
         //std::cout<<render_info.p[i]<<std::endl;
         //std::cout<<(render_info.p[i]-min)/(max-min)<<std::endl;

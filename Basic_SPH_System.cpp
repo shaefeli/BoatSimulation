@@ -19,7 +19,7 @@ private:
     T _data[N];
 };
 
-Basic_SPH_System::Basic_SPH_System( size_t n_particles,
+Basic_SPH_System::Basic_SPH_System( size_t n_liquid_particles,
                                     float b_min_x,//Boundary values
                                     float b_min_y,
                                     float b_min_z,
@@ -52,25 +52,25 @@ void Basic_SPH_System::finilizeInit() {
     uint32_t seed = 1981;
     std::vector<Vec<float,3>> samples = thinks::poissonDiskSampling(this->simState.h*0.7,x_min, x_max,max_sample_attempts, seed);
     
-    particles.n_particles = samples.size();
+    particles.n_liquid_particles = samples.size();
     
-    particles.x = (float *)malloc(particles.n_particles*sizeof(float));
-    particles.y = (float *)malloc(particles.n_particles*sizeof(float));
-    particles.z = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.x = (float *)malloc(particles.n_liquid_particles*sizeof(float));
+    particles.y = (float *)malloc(particles.n_liquid_particles*sizeof(float));
+    particles.z = (float *)malloc(particles.n_liquid_particles*sizeof(float));
     
-    particles.vx = (float *)malloc(particles.n_particles*sizeof(float));
-    particles.vy = (float *)malloc(particles.n_particles*sizeof(float));
-    particles.vz = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.vx = (float *)malloc(particles.n_liquid_particles*sizeof(float));
+    particles.vy = (float *)malloc(particles.n_liquid_particles*sizeof(float));
+    particles.vz = (float *)malloc(particles.n_liquid_particles*sizeof(float));
     
-    particles.Fx = (float *)malloc(particles.n_particles*sizeof(float));
-    particles.Fy = (float *)malloc(particles.n_particles*sizeof(float));
-    particles.Fz = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.Fx = (float *)malloc(particles.n_liquid_particles*sizeof(float));
+    particles.Fy = (float *)malloc(particles.n_liquid_particles*sizeof(float));
+    particles.Fz = (float *)malloc(particles.n_liquid_particles*sizeof(float));
     
-    particles.rho = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.rho = (float *)malloc(particles.n_liquid_particles*sizeof(float));
     
-    particles.p = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.p = (float *)malloc(particles.n_liquid_particles*sizeof(float));
     
-    for( size_t i = 0; i < this->particles.n_particles; i++ ) {
+    for( size_t i = 0; i < this->particles.n_liquid_particles; i++ ) {
         particles.x[i] = samples[i][0];
         particles.y[i] = samples[i][1];
         particles.z[i] = samples[i][2];
@@ -184,7 +184,7 @@ float Basic_SPH_System::evalKernel_visc_laplacian(int &i, int &j, float &h) {
 
 void Basic_SPH_System::update_velocities_dummy(float dt)
 {
-    for( size_t i = 0; i < particles.n_particles; i++ ) {
+    for( size_t i = 0; i < particles.n_liquid_particles; i++ ) {
         update_particle_velocity_dummy(i,dt);
     }
 
@@ -192,7 +192,7 @@ void Basic_SPH_System::update_velocities_dummy(float dt)
 
 void Basic_SPH_System::update_positions_dummy(float dt)
 {
-    for( size_t i = 0; i < particles.n_particles; i++ ) {
+    for( size_t i = 0; i < particles.n_liquid_particles; i++ ) {
         update_particle_position_dummy(i,dt);
     }
 }
@@ -201,7 +201,7 @@ void Basic_SPH_System::calculate_Densities(){
 
     std::vector<size_t> near_cells;
     // iterate ALL particles in the system
-    for(int i = 0; i < this->particles.n_particles; i++){
+    for(int i = 0; i < this->particles.n_liquid_particles; i++){
         near_cells.clear();
         this->uniform_grid.query_neighbors(
                 this->particles.x[i],
@@ -229,7 +229,7 @@ void Basic_SPH_System::calculate_Pressures() {
     float rho0 = this->simState.rho0;
     float k = this->simState.k;
     
-    for(int i = 0; i < this->particles.n_particles; i++){
+    for(int i = 0; i < this->particles.n_liquid_particles; i++){
         float rho = this->particles.rho[i];
         this->particles.p[i] = (float) std::max( (float)(k * (pow(rho / rho0, 7) - 1) ), 0.0f);
 //        this->particles.p[i] = (float) std::max( (float)(k * (rho - rho0)), 0.0f);
@@ -240,7 +240,7 @@ void Basic_SPH_System::calculate_Forces() {
 
     std::vector<size_t> near_cells;
     // iterate ALL particles in the system
-    for(int i = 0; i < this->particles.n_particles; i++){
+    for(int i = 0; i < this->particles.n_liquid_particles; i++){
         near_cells.clear();
         this->uniform_grid.query_neighbors(
                 this->particles.x[i],
@@ -330,7 +330,7 @@ void Basic_SPH_System::update_particle_velocity_dummy(int i, float dt)
 
 size_t Basic_SPH_System::get_particle_number()
 {
-    return particles.n_particles;
+    return particles.n_liquid_particles;
 }
 
 //Main function that updates our particle system
@@ -338,7 +338,7 @@ void Basic_SPH_System::run_step(float dt)
 {
 
     //Update the neighbor information
-    uniform_grid.build(particles.x,particles.y,particles.z,particles.n_particles);
+    uniform_grid.build(particles.x,particles.y,particles.z,particles.n_liquid_particles);
 
     //This way we can choose to have a function per particle
     //Or a general one that does all of them
@@ -351,7 +351,7 @@ void Basic_SPH_System::run_step(float dt)
     
     float m  = this->particles.mass;
     
-    for(int i = 0; i < this->particles.n_particles; i++){
+    for(int i = 0; i < this->particles.n_liquid_particles; i++){
         this->particles.vx[i] += dt / m * this->particles.Fx[i];
         this->particles.vy[i] += dt / m * this->particles.Fy[i];
         this->particles.vz[i] += dt / m * this->particles.Fz[i];
