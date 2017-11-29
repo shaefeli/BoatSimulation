@@ -105,6 +105,5 @@ void Maya_Interface::writeToMaya(size_t frameNr, float* x ,float* y, float* z, s
 
   	//Write everything to file
   	mayaFile << header.str() << this->fileStart << cube.str() << particuleInfos.str() << positions.str() << this->ids << afterParticles.str() << this->fileEnd << "\n// End of frame" << frameNr << ".ma;"; 
-  	//mayaFile << this->fileStart;
   	mayaFile.close();
 }
