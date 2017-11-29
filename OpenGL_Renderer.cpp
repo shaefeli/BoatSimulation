@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "./viridis.h"
+
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     Render_mode *rm = (Render_mode *)glfwGetWindowUserPointer(window);

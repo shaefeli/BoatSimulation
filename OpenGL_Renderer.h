@@ -4,10 +4,16 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-#include <GL/glut.h>
+
+#ifdef __APPLE__
+    #include <GLUT/glut.h>
+#else
+    #include <GL/glut.h>
+#endif
+
 #include <cstddef>
 #include "Uniform_Grid.h"
-#include "viridis.h"
+
 
 
 typedef enum { NONE, NEIGHBORS, GRID, SPEED, FORCE, DENSITY, PRESSURE } Render_mode;
@@ -18,7 +24,7 @@ class OpenGL_Renderer
     private:
     GLFWwindow* window; // this variable is global for simplicity)
     GLuint VertexArrayID;
-	GLuint vertexbuffer;
+    GLuint vertexbuffer;
     GLuint programID;
 
     GLuint box_VAO;
@@ -28,13 +34,13 @@ class OpenGL_Renderer
     GLuint particles_VBO, colors_VBO;
 
     //uniforms
-	GLuint MatrixID;
+    GLuint MatrixID;
     GLuint color_uniform;
 
-	glm::mat4 Projection;
-	glm::mat4 View;
-	glm::mat4 Model;
-	glm::mat4 MVP;
+    glm::mat4 Projection;
+    glm::mat4 View;
+    glm::mat4 Model;
+    glm::mat4 MVP;
 
     Uniform_Grid *ug;
 
