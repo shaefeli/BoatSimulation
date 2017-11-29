@@ -9,7 +9,8 @@ int main(int argc, char** argv){
 
     
     SimState state;
-    state.dt = 5e-4;
+    //state.dt = 5e-4;
+    state.dt = 1e-5;
     state.g  = 9.8;
     state.h  = 0.0625;
     state.k  = 3.5;
@@ -27,7 +28,9 @@ int main(int argc, char** argv){
     Maya_Interface maya(5000);
 
     //renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
-    renderer.render_info.n_liquid_particles = bsph.particles.n_total_particles;
+    renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
+    renderer.render_info.n_total_particles = bsph.particles.n_total_particles;
+
     renderer.render_info.x = bsph.particles.x;
     renderer.render_info.y = bsph.particles.y;
     renderer.render_info.z = bsph.particles.z;
@@ -52,7 +55,7 @@ int main(int argc, char** argv){
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << it * state.dt << "] sec\n";
         //std::cout<<"iteration "<<it<<std::endl;
-//        usleep(10000);
+        //usleep(1000);
         if(it == 0 || it==1 || it==2){
             maya.writeToMaya(it,bsph.particles.x,bsph.particles.y,bsph.particles.z, bsph.particles.n_liquid_particles);
         } 

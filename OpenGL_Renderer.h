@@ -42,17 +42,21 @@ class OpenGL_Renderer
     glm::mat4 Model;
     glm::mat4 MVP;
 
+
     Uniform_Grid *ug;
 
     float *interleaved_buffer;
     float *color_buffer;
 
-    Render_mode render_mode = NONE;
 
     public:
+    bool display_boundary = false;
+    Render_mode render_mode = NONE;
     
         typedef struct {
                             size_t n_liquid_particles;
+                            size_t n_total_particles;
+
                             const float *x;
                             const float *y;
                             const float *z;

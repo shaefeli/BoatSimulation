@@ -10,34 +10,38 @@
 
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    Render_mode *rm = (Render_mode *)glfwGetWindowUserPointer(window);
+    OpenGL_Renderer *oglr = (OpenGL_Renderer *)glfwGetWindowUserPointer(window);
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, GL_TRUE);
     } 
-    else if ( rm != NULL && key == GLFW_KEY_1 && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_1 && action == GLFW_PRESS)
     {
-        *rm = NONE;
+        oglr->render_mode = NONE;
     }
-    else if ( rm != NULL && key == GLFW_KEY_2 && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_2 && action == GLFW_PRESS)
     {
-        *rm = NEIGHBORS;
+        oglr->render_mode = NEIGHBORS;
     }
-    else if ( rm != NULL && key == GLFW_KEY_3 && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_3 && action == GLFW_PRESS)
     {
-        *rm = GRID;
+        oglr->render_mode = GRID;
     }
-    else if ( rm != NULL && key == GLFW_KEY_4 && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_4 && action == GLFW_PRESS)
     {
-        *rm = FORCE;
+        oglr->render_mode = FORCE;
     }
-    else if ( rm != NULL && key == GLFW_KEY_5 && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_5 && action == GLFW_PRESS)
     {
-        *rm = DENSITY;
+        oglr->render_mode = DENSITY;
     }
-    else if ( rm != NULL && key == GLFW_KEY_6 && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_6 && action == GLFW_PRESS)
     {
-        *rm = PRESSURE;
+        oglr->render_mode = PRESSURE;
+    }
+    else if ( oglr != NULL && key == GLFW_KEY_0 && action == GLFW_PRESS)
+    {
+        oglr->display_boundary = not oglr->display_boundary;
     }
 }
 
@@ -173,7 +177,8 @@ bool OpenGL_Renderer::init( int argc, char** argv)
     
     // Set the keyboard callback so that when we press ESC, it knows what to do.
     glfwSetKeyCallback(window, key_callback);
-    glfwSetWindowUserPointer(this->window,(void *)&(this->render_mode));
+    //glfwSetWindowUserPointer(this->window,(void *)&(this->render_mode));
+    glfwSetWindowUserPointer(this->window,(void *)this);
 
     programID = LoadShaders("./vertex_shader.vs","./fragment_shader.fs");
     glUseProgram(programID);
@@ -306,7 +311,7 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 	glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
 
     
-    size_t nparticles = render_info.n_liquid_particles;
+    size_t nparticles = render_info.n_total_particles;
     printf("n_liquid_particles: %lu\n",nparticles);
     //nparticles = 5;
 
@@ -404,7 +409,10 @@ void OpenGL_Renderer::draw_particles( )
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
 
-    size_t nparticles = render_info.n_liquid_particles;
+    size_t nparticles;
+    if(display_boundary) nparticles = render_info.n_liquid_particles;
+    else nparticles = render_info.n_total_particles;
+
     //float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
     for( int i = 0; i < nparticles; i++ ) {
         interleaved_buffer[i*3 + 0] = render_info.x[i];
@@ -490,7 +498,9 @@ void OpenGL_Renderer::reshape(int x, int y)
 
 void OpenGL_Renderer::set_grid_color()
 {
-    size_t nparticles = render_info.n_liquid_particles;
+    size_t nparticles;
+    if(display_boundary) nparticles = render_info.n_liquid_particles;
+    else nparticles = render_info.n_total_particles;
     //Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
     for( size_t i = 0; i < nparticles; i++ ) {
         size_t gi,gj,gk;
@@ -512,8 +522,11 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
     //Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
     //ug.build(render_info.x,render_info.y,render_info.z,render_info.n_liquid_particles);
    
+    size_t nparticles;
+    if(display_boundary) nparticles = render_info.n_liquid_particles;
+    else nparticles = render_info.n_total_particles;
 
-    for( size_t i = 0; i < render_info.n_liquid_particles; i++ ) {
+    for( size_t i = 0; i < nparticles; i++ ) {
         color_buffer[3*i]   = 0.;
         color_buffer[3*i+1] = 0.;
         color_buffer[3*i+2] = 1.;
@@ -562,9 +575,12 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
 
 void OpenGL_Renderer::set_density_color()
 {
+    size_t nparticles;
+    if(display_boundary) nparticles = render_info.n_liquid_particles;
+    else nparticles = render_info.n_total_particles;
+
     double min = 2000.;
     double max = 3500.;
-    size_t nparticles = render_info.n_liquid_particles;
     for( size_t i = 0; i < nparticles; i++ ) {
         //std::cout<<(render_info.rho[i]-min)/(max-min)<<std::endl;
         //std::cout<<render_info.rho[i]<<std::endl;
@@ -581,9 +597,12 @@ void OpenGL_Renderer::set_density_color()
 
 void OpenGL_Renderer::set_pressure_color()
 {
+    size_t nparticles;
+    if(display_boundary) nparticles = render_info.n_liquid_particles;
+    else nparticles = render_info.n_total_particles;
+
     double min = 5000.;
     double max = 15000.;
-    size_t nparticles = render_info.n_liquid_particles;
     for( size_t i = 0; i < nparticles; i++ ) {
         //std::cout<<render_info.p[i]<<std::endl;
         //std::cout<<(render_info.p[i]-min)/(max-min)<<std::endl;

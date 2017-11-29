@@ -56,7 +56,7 @@ void Basic_SPH_System::finilizeInit() {
     particles.n_liquid_particles = liquid_samples.size();
 
     //Initialize the boudaries by sampling too. Have to do it for the three planes
-    float sampling_distance_boundary = 0.5;
+    float sampling_distance_boundary = 0.6;
     //XY
     Vec<float,2> b_min_xy, b_max_xy;
     b_min_xy[0] = b_min_x;
@@ -169,7 +169,7 @@ void Basic_SPH_System::finilizeInit() {
         particles.vy[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vz[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
 
-        particles.x[particles.n_liquid_particles  + b_samples_yz.size() + offset + i] = b_min_x;
+        particles.x[particles.n_liquid_particles  + b_samples_yz.size() + offset + i] = b_max_x;
         particles.y[particles.n_liquid_particles  + b_samples_yz.size() + offset + i] = b_samples_yz[i][0];
         particles.z[particles.n_liquid_particles  + b_samples_yz.size() + offset + i] = b_samples_yz[i][1];
         
@@ -436,7 +436,8 @@ void Basic_SPH_System::run_step(float dt)
 {
 
     //Update the neighbor information
-    uniform_grid.build(particles.x,particles.y,particles.z,particles.n_liquid_particles);
+    //uniform_grid.build(particles.x,particles.y,particles.z,particles.n_liquid_particles);
+    uniform_grid.build(particles.x,particles.y,particles.z,particles.n_total_particles);
 
     //This way we can choose to have a function per particle
     //Or a general one that does all of them
@@ -463,14 +464,14 @@ void Basic_SPH_System::run_step(float dt)
          * If trying to escape - return and set velocity to 0.
          * Sort of - No-Slip boundary condition .
          */
-        if (this->particles.x[i] < 0 ) {        particles.x[i] = 0.0001f; particles.vx[i] = 0.0f; }
-        if (this->particles.x[i] > b_max_x )  { particles.x[i] = b_max_x; particles.vx[i]  = 0.0f; }
+        //if (this->particles.x[i] < 0 ) {        particles.x[i] = 0.0001f; particles.vx[i] = 0.0f; }
+        //if (this->particles.x[i] > b_max_x )  { particles.x[i] = b_max_x; particles.vx[i]  = 0.0f; }
 
-        if (this->particles.y[i] < 0 ) {       particles.y[i] = 0.0001f;     particles.vy[i] = 0.; }
-        if (this->particles.y[i] > b_max_y)  { particles.y[i] = b_max_y;  particles.vy[i] = 0.; }
+        //if (this->particles.y[i] < 0 ) {       particles.y[i] = 0.0001f;     particles.vy[i] = 0.; }
+        //if (this->particles.y[i] > b_max_y)  { particles.y[i] = b_max_y;  particles.vy[i] = 0.; }
 
-        if (this->particles.z[i] < 0 ) {       particles.z[i] = 0.0001f; particles.vz[i] = 0.0f; }
-        if (this->particles.z[i] > b_max_z)  { particles.z[i] = b_max_z;  particles.vz[i] = 0.0f; }
+        //if (this->particles.z[i] < 0 ) {       particles.z[i] = 0.0001f; particles.vz[i] = 0.0f; }
+        //if (this->particles.z[i] > b_max_z)  { particles.z[i] = b_max_z;  particles.vz[i] = 0.0f; }
     }
 }
 
