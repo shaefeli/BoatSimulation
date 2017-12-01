@@ -33,6 +33,8 @@ class OpenGL_Renderer
     GLuint particles_VAO;
     GLuint particles_VBO, colors_VBO;
 
+    GLuint element_index_VBO, element_positions_VBO;
+
     //uniforms
     GLuint MatrixID;
     GLuint color_uniform;

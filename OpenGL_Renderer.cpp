@@ -336,6 +336,36 @@ bool OpenGL_Renderer::init( int argc, char** argv)
     }
 
     glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), color_buffer, GL_STATIC_DRAW);
+    
+    //Element to draw
+	//glGenBuffers(1, &element_index_VBO);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_positions_VBO);
+
+    //static const GLfloat minimal_element_vertices[] = { 
+    //    -1.0f,-1.0f,-1.0f, // 0 
+    //     1.0f,-1.0f,-1.0f, // 1
+    //    -1.0f, 1.0f,-1.0f, // 2
+    //     1.0f, 1.0f,-1.0f, // 3
+    //                 
+    //    -1.0f,-1.0f, 1.0f, // 4
+    //     1.0f,-1.0f, 1.0f, // 5
+    //    -1.0f, 1.0f, 1.0f, // 6
+    //     1.0f, 1.0f, 1.0f  // 7
+    //};
+
+    //static const GLint minimal_element_indices[] = {
+    //    4,5,6,
+    //    5,7,6
+    //};
+
+	//glGenBuffers(1, &element_positions_VBO);
+	//glBindBuffer(GL_ARRAY_BUFFER, element_positions_VBO);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(minimal_element_vertices), minimal_element_vertices, GL_STATIC_DRAW);
+
+	//glGenBuffers(1, &element_index_VBO);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_index_VBO);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(minimal_element_indices), minimal_element_indices, GL_STATIC_DRAW);
+    //Element drawn
 
     
     glBindVertexArray(0);
