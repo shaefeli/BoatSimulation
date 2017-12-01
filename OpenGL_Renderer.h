@@ -33,7 +33,7 @@ class OpenGL_Renderer
     GLuint particles_VAO;
     GLuint particles_VBO, colors_VBO;
 
-    GLuint element_index_VBO, element_positions_VBO;
+    GLuint element_index_VBO, element_positions_VBO, element_normals_VBO;
 
     //uniforms
     GLuint MatrixID;
@@ -52,7 +52,7 @@ class OpenGL_Renderer
 
 
     public:
-    bool display_boundary = false;
+    bool display_boundary = true;
     Render_mode render_mode = NONE;
     
         typedef struct {
@@ -86,7 +86,10 @@ class OpenGL_Renderer
 
         void draw_box();
         void draw_particles();
+
+        void draw_element( float x, float y, float z );
     
+        void draw_particles_elements( );
         //Function to set the color according to parameter
         void set_grid_color();
         void set_neighbor_color( size_t particle_index );

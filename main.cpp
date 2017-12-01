@@ -9,8 +9,8 @@ int main(int argc, char** argv){
 
     
     SimState state;
-    //state.dt = 5e-4;
-    state.dt = 1e-5;
+    state.dt = 5e-4;
+    //state.dt = 1e-5;
     state.g  = 9.8;
     state.h  = 0.0625;
     state.k  = 3.5;
