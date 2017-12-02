@@ -60,7 +60,7 @@ private:
     void update_particle_position_dummy(int i, float dt);
     void update_particle_velocity_dummy(int i, float dt);
 
-
+    void move_solid_object( float x, float y, float z );
 
     size_t get_particle_number();
 

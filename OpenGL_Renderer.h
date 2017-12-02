@@ -52,11 +52,14 @@ class OpenGL_Renderer
 
 
     public:
-    bool display_boundary = true;
+    bool display_boundary = true; //IF true not show, I know, but dont wanna change
+    bool display_mobile = false;
     Render_mode render_mode = NONE;
     
         typedef struct {
                             size_t n_liquid_particles;
+                            size_t n_boundary_particles;
+                            size_t n_mobile_particles;
                             size_t n_total_particles;
 
                             const float *x;

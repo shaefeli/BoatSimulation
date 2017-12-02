@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <math.h>
 #include <thinks/poissonDiskSampling.hpp>
+#include "Particle_Generator.h"
 
 
 template <typename T, std::size_t N>
@@ -46,9 +47,9 @@ void Basic_SPH_System::finilizeInit() {
     x_min[0] = 0.0f;
     x_min[1] = 0.0f;
     x_min[2] = 0.0f;
-    x_max[0] = 0.5;
-    x_max[1] = 0.7;
-    x_max[2] = 0.5;
+    x_max[0] = 1.;
+    x_max[1] = 0.3;
+    x_max[2] = 1.;
     uint32_t max_sample_attempts = 30;
     uint32_t seed = 1981;
     std::vector<Vec<float,3>> liquid_samples = thinks::poissonDiskSampling(this->simState.h*0.7,x_min, x_max,max_sample_attempts, seed);
@@ -85,8 +86,22 @@ void Basic_SPH_System::finilizeInit() {
 
 
     //Initialize the movable particle object
-    particles.n_mobile_particles = 0;
-   
+    std::vector<float> x_mob;
+    std::vector<float> y_mob;
+    std::vector<float> z_mob;
+    size_t n_mobile_particles;
+
+    generate_particle_cube(0.1,0.025, x_mob, y_mob, z_mob, n_mobile_particles);
+
+    size_t mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
+    particles.n_mobile_particles = n_mobile_particles;
+
+
+
+
+
+
+
 
 
     //Reserve memory for all the particles
@@ -178,7 +193,19 @@ void Basic_SPH_System::finilizeInit() {
         particles.vz[particles.n_liquid_particles + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
     }
     //Initialize the mobile particles
+    //Offsets for the mobile particles position (remember that at start they are centered around zero)
+    float x_offset = 0.5f;
+    float y_offset = 0.2f;
+    float z_offset = -0.3f;
+    for( int i = 0; i < n_mobile_particles; i++ ) {
+        particles.x[mobile_offset + i] = x_mob[i] + x_offset;
+        particles.y[mobile_offset + i] = y_mob[i] + y_offset;
+        particles.z[mobile_offset + i] = z_mob[i] + z_offset;
 
+        particles.vx[mobile_offset + i] = 0.f;
+        particles.vy[mobile_offset + i] = 0.f;
+        particles.vz[mobile_offset + i] = 0.f;
+    }
 
     this->flag_finilized = true;
 }
@@ -435,6 +462,8 @@ size_t Basic_SPH_System::get_particle_number()
 void Basic_SPH_System::run_step(float dt)
 {
 
+    move_solid_object( 0., 0., 1*dt);
+
     //Update the neighbor information
     uniform_grid.build(particles.x,particles.y,particles.z,particles.n_liquid_particles);
     //uniform_grid.build(particles.x,particles.y,particles.z,particles.n_total_particles);
@@ -475,6 +504,15 @@ void Basic_SPH_System::run_step(float dt)
     }
 }
 
+void Basic_SPH_System::move_solid_object( float x, float y, float z )
+{
+    for( size_t i = particles.n_liquid_particles + particles.n_boundary_particles;
+            i < particles.n_total_particles; i++ ) {
+        particles.x[i] += x;
+        particles.y[i] += y;
+        particles.z[i] += z;
+    }
+}
 
 Basic_SPH_System::~Basic_SPH_System(){
     free(particles.Fx);

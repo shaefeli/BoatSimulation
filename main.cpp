@@ -29,6 +29,8 @@ int main(int argc, char** argv){
 
     //renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
     renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
+    renderer.render_info.n_boundary_particles = bsph.particles.n_boundary_particles;
+    renderer.render_info.n_mobile_particles = bsph.particles.n_mobile_particles;
     renderer.render_info.n_total_particles = bsph.particles.n_total_particles;
 
     renderer.render_info.x = bsph.particles.x;

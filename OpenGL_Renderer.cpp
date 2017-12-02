@@ -45,6 +45,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     {
         oglr->display_boundary = not oglr->display_boundary;
     }
+    else if ( oglr != NULL && key == GLFW_KEY_9 && action == GLFW_PRESS)
+    {
+        oglr->display_mobile = not oglr->display_mobile;
+    }
 }
 
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path) {
@@ -716,21 +720,30 @@ void OpenGL_Renderer::draw_particles_elements( )
     //Draw the points
     //glEnableVertexArrayAttrib(particles_VAO,0);
 
-    size_t nparticles;
-    if(display_boundary) nparticles = render_info.n_liquid_particles;
-    else nparticles = render_info.n_total_particles;
+    size_t part_offset = 0;
+    //if(display_boundary) nparticles = render_info.n_liquid_particles;
+    //else nparticles = render_info.n_total_particles;
 
     //float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
-    for( int i = 0; i < nparticles; i++ ) {
+    
+    for( int i = 0; i < render_info.n_liquid_particles; i++ ) {
         glUniform3f(color_uniform, color_buffer[3*i], color_buffer[3*i+1], color_buffer[3*i+2]);
         draw_element(render_info.x[i],render_info.y[i],render_info.z[i]);
-
-        //interleaved_buffer[i*3 + 0] = render_info.x[i];
-        //interleaved_buffer[i*3 + 1] = render_info.y[i];
-        //interleaved_buffer[i*3 + 2] = render_info.z[i];
     }
-
-
+    part_offset += render_info.n_liquid_particles;
+    if( not display_boundary ) {;
+        for( int i = part_offset; i < part_offset + render_info.n_boundary_particles; i++ ) {
+            glUniform3f(color_uniform, color_buffer[3*i], color_buffer[3*i+1], color_buffer[3*i+2]);
+            draw_element(render_info.x[i],render_info.y[i],render_info.z[i]);
+        }
+    }
+    part_offset += render_info.n_boundary_particles;
+    if( not display_mobile ) {;
+        for( int i = part_offset; i < part_offset + render_info.n_mobile_particles; i++ ) {
+            glUniform3f(color_uniform, color_buffer[3*i], color_buffer[3*i+1], color_buffer[3*i+2]);
+            draw_element(render_info.x[i],render_info.y[i],render_info.z[i]);
+        }
+    }
 
 }
 
@@ -775,9 +788,9 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
     //Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
     //ug.build(render_info.x,render_info.y,render_info.z,render_info.n_liquid_particles);
    
-    size_t nparticles;
-    if(display_boundary) nparticles = render_info.n_liquid_particles;
-    else nparticles = render_info.n_total_particles;
+    size_t nparticles = render_info.n_total_particles;
+    //if(display_boundary) nparticles = render_info.n_liquid_particles;
+    //else nparticles = render_info.n_total_particles;
 
     for( size_t i = 0; i < nparticles; i++ ) {
         color_buffer[3*i]   = 0.;
@@ -828,9 +841,9 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
 
 void OpenGL_Renderer::set_density_color()
 {
-    size_t nparticles;
-    if(display_boundary) nparticles = render_info.n_liquid_particles;
-    else nparticles = render_info.n_total_particles;
+    size_t nparticles = render_info.n_total_particles;
+    //if(display_boundary) nparticles = render_info.n_liquid_particles;
+    //else nparticles = render_info.n_total_particles;
 
     //double min = 2000.;
     //double max = 3500.;
@@ -860,9 +873,9 @@ void OpenGL_Renderer::set_density_color()
 
 void OpenGL_Renderer::set_pressure_color()
 {
-    size_t nparticles;
-    if(display_boundary) nparticles = render_info.n_liquid_particles;
-    else nparticles = render_info.n_total_particles;
+    size_t nparticles = render_info.n_total_particles;
+    //if(display_boundary) nparticles = render_info.n_liquid_particles;
+    //else nparticles = render_info.n_total_particles;
     
     float min = std::numeric_limits<float>::max();
     float max = std::numeric_limits<float>::min();
