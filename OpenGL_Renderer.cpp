@@ -2,42 +2,52 @@
 #include <iostream>
 #include <cstdio>
 #include <fstream>
+#include <limits>
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <glm/gtx/transform.hpp>
 
 #include "./viridis.h"
 
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    Render_mode *rm = (Render_mode *)glfwGetWindowUserPointer(window);
+    OpenGL_Renderer *oglr = (OpenGL_Renderer *)glfwGetWindowUserPointer(window);
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, GL_TRUE);
     } 
-    else if ( rm != NULL && key == GLFW_KEY_1 && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_1 && action == GLFW_PRESS)
     {
-        *rm = NONE;
+        oglr->render_mode = NONE;
     }
-    else if ( rm != NULL && key == GLFW_KEY_2 && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_2 && action == GLFW_PRESS)
     {
-        *rm = NEIGHBORS;
+        oglr->render_mode = NEIGHBORS;
     }
-    else if ( rm != NULL && key == GLFW_KEY_3 && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_3 && action == GLFW_PRESS)
     {
-        *rm = GRID;
+        oglr->render_mode = GRID;
     }
-    else if ( rm != NULL && key == GLFW_KEY_4 && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_4 && action == GLFW_PRESS)
     {
-        *rm = FORCE;
+        oglr->render_mode = FORCE;
     }
-    else if ( rm != NULL && key == GLFW_KEY_5 && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_5 && action == GLFW_PRESS)
     {
-        *rm = DENSITY;
+        oglr->render_mode = DENSITY;
     }
-    else if ( rm != NULL && key == GLFW_KEY_6 && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_6 && action == GLFW_PRESS)
     {
-        *rm = PRESSURE;
+        oglr->render_mode = PRESSURE;
+    }
+    else if ( oglr != NULL && key == GLFW_KEY_0 && action == GLFW_PRESS)
+    {
+        oglr->display_boundary = not oglr->display_boundary;
+    }
+    else if ( oglr != NULL && key == GLFW_KEY_9 && action == GLFW_PRESS)
+    {
+        oglr->display_mobile = not oglr->display_mobile;
     }
 }
 
@@ -173,7 +183,8 @@ bool OpenGL_Renderer::init( int argc, char** argv)
     
     // Set the keyboard callback so that when we press ESC, it knows what to do.
     glfwSetKeyCallback(window, key_callback);
-    glfwSetWindowUserPointer(this->window,(void *)&(this->render_mode));
+    //glfwSetWindowUserPointer(this->window,(void *)&(this->render_mode));
+    glfwSetWindowUserPointer(this->window,(void *)this);
 
     programID = LoadShaders("./vertex_shader.vs","./fragment_shader.fs");
     glUseProgram(programID);
@@ -306,8 +317,8 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 	glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
 
     
-    size_t nparticles = render_info.n_particles;
-    printf("n_particles: %lu\n",nparticles);
+    size_t nparticles = render_info.n_total_particles;
+    printf("n_liquid_particles: %lu\n",nparticles);
     //nparticles = 5;
 
     //float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
@@ -331,8 +342,121 @@ bool OpenGL_Renderer::init( int argc, char** argv)
     }
 
     glBufferData(GL_ARRAY_BUFFER, nparticles*3*sizeof(GLfloat), color_buffer, GL_STATIC_DRAW);
-
     
+    //Element to draw
+	glGenBuffers(1, &element_index_VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_positions_VBO);
+
+
+	glGenBuffers(1, &element_normals_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, element_normals_VBO);
+
+
+    static const GLfloat minimal_element_vertices[] = { 
+        //Face 1
+        -1.0f,-1.0f, 1.0f, // 0
+         1.0f,-1.0f, 1.0f, // 1
+        -1.0f, 1.0f, 1.0f, // 2
+         1.0f, 1.0f, 1.0f, // 3
+
+        -1.0f,-1.0f,-1.0f, // 4
+         1.0f,-1.0f,-1.0f, // 5
+        -1.0f, 1.0f,-1.0f, // 6
+         1.0f, 1.0f,-1.0f, // 7
+
+
+        -1.0f, 1.0f,-1.0f, // 8
+        -1.0f, 1.0f, 1.0f, // 9
+         1.0f, 1.0f,-1.0f, // 10
+         1.0f, 1.0f, 1.0f, // 11
+
+        -1.0f,-1.0f,-1.0f, // 12
+        -1.0f,-1.0f, 1.0f, // 13
+         1.0f,-1.0f,-1.0f, // 14
+         1.0f,-1.0f, 1.0f, // 15
+
+
+         1.0f,-1.0f,-1.0f, // 16
+         1.0f,-1.0f, 1.0f, // 17
+         1.0f, 1.0f,-1.0f, // 18
+         1.0f, 1.0f, 1.0f, // 19
+
+        -1.0f,-1.0f,-1.0f, // 20
+        -1.0f,-1.0f, 1.0f, // 21
+        -1.0f, 1.0f,-1.0f, // 22
+        -1.0f, 1.0f, 1.0f, // 23
+
+    };
+
+    static const GLfloat minimal_element_normals[] = {
+         0.0f, 0.0f, 1.0f,
+         0.0f, 0.0f, 1.0f,
+         0.0f, 0.0f, 1.0f,
+         0.0f, 0.0f, 1.0f,
+
+         0.0f, 0.0f,-1.0f,
+         0.0f, 0.0f,-1.0f,
+         0.0f, 0.0f,-1.0f,
+         0.0f, 0.0f,-1.0f,
+        
+         0.0f, 1.0f, 0.0f,
+         0.0f, 1.0f, 0.0f,
+         0.0f, 1.0f, 0.0f,
+         0.0f, 1.0f, 0.0f,
+
+         0.0f,-1.0f, 0.0f,
+         0.0f,-1.0f, 0.0f,
+         0.0f,-1.0f, 0.0f,
+         0.0f,-1.0f, 0.0f,
+
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+
+         1.0f, 0.0f, 0.0f,
+         1.0f, 0.0f, 0.0f,
+         1.0f, 0.0f, 0.0f,
+         1.0f, 0.0f, 0.0f,
+    };
+
+    static const GLuint minimal_element_indices[] = {
+        0,1,2,
+        1,3,2,
+        
+        4,5,6,
+        5,7,6,
+        
+        8,9,10,
+        9,11,10,
+        
+        12,13,14,
+        13,15,14,
+        
+        16,17,18,
+        17,19,18,
+
+        20,21,22,
+        21,23,22,
+    };
+
+
+	glGenBuffers(1, &element_positions_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, element_positions_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(minimal_element_vertices), minimal_element_vertices, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &element_index_VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_index_VBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(minimal_element_indices), minimal_element_indices, GL_STATIC_DRAW);
+    //Element drawn
+
+	glGenBuffers(1, &element_normals_VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_normals_VBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(minimal_element_normals), minimal_element_normals, GL_STATIC_DRAW);
+   
+
+
+
     glBindVertexArray(0);
     return true;
 }
@@ -344,12 +468,18 @@ void OpenGL_Renderer::draw()
 {
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    glClearColor(0.7,0.7,0.7,0.);
 
     glUseProgram(programID);
+    //////
+	//MVP      = glm::mat4(1.0f);
+    //7////
     glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
     
-    draw_particles();
+    //draw_particles();
     draw_box();
+    //draw_element(0.2,0.3,0.8);
+    draw_particles_elements();
 
 	glfwSwapBuffers(window);
     glfwPollEvents();
@@ -404,7 +534,10 @@ void OpenGL_Renderer::draw_particles( )
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, particles_VBO);
 
-    size_t nparticles = render_info.n_particles;
+    size_t nparticles;
+    if(display_boundary) nparticles = render_info.n_liquid_particles;
+    else nparticles = render_info.n_total_particles;
+
     //float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
     for( int i = 0; i < nparticles; i++ ) {
         interleaved_buffer[i*3 + 0] = render_info.x[i];
@@ -470,9 +603,150 @@ void OpenGL_Renderer::draw_particles( )
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+
+
 
 
 }
+
+
+void OpenGL_Renderer::draw_element( float x, float y, float z )
+{
+    
+    //Transform
+    Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
+	View       = glm::lookAt(
+                        glm::vec3(2,1.5,1.5), // Camera is at (4,3,3), in World Space
+                        glm::vec3(0,0,0), // and looks at the origin
+                        glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+                   );
+	//Model      = glm::mat4(1.0f);
+    
+    glm::mat4 Rotation       = glm::mat4(0.007f);
+    Rotation[3][3] = 1.;
+    
+
+    glm::mat4 Translation = glm::translate(glm::vec3(x,y,z));
+
+	Model      = Translation*Rotation*glm::mat4(1.0f);
+	MVP        = Projection * View * Model;
+    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    
+
+
+
+
+    //Draw element
+   
+    glBindVertexArray(particles_VAO);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, element_positions_VBO);
+
+    
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        0,
+        (void*)0
+    );
+
+    glVertexAttribPointer(
+        2,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        0,
+        (void*)0
+    );
+
+
+    //glfwSetWindowUserPointer
+    
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_index_VBO);
+
+    //glDrawArrays(GL_TRIANGLES, 0, 3);
+    
+    glDrawElements(
+            GL_TRIANGLES,
+            12*3,
+            GL_UNSIGNED_INT,
+            (void*)0
+            );
+
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(2);
+
+	MVP        = Projection * View;
+    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+}
+
+
+
+void OpenGL_Renderer::draw_particles_elements( )
+{
+    glUniform3f(color_uniform, 0., 0., 1.);
+
+    switch(this->render_mode) {
+        case NEIGHBORS:
+            set_neighbor_color(0);
+            break;
+        case GRID:
+            set_grid_color();
+            break;
+        case SPEED:
+            break;
+        case FORCE:
+            break;
+        case DENSITY:
+            set_density_color();
+            break;
+        case PRESSURE:
+            set_pressure_color();
+            break;
+        default:
+
+            break;
+    }
+
+
+
+    //Draw the points
+    //glEnableVertexArrayAttrib(particles_VAO,0);
+
+    size_t part_offset = 0;
+    //if(display_boundary) nparticles = render_info.n_liquid_particles;
+    //else nparticles = render_info.n_total_particles;
+
+    //float *interleaved_data = (float *)malloc(3*nparticles*sizeof(float));
+    
+    for( int i = 0; i < render_info.n_liquid_particles; i++ ) {
+        glUniform3f(color_uniform, color_buffer[3*i], color_buffer[3*i+1], color_buffer[3*i+2]);
+        draw_element(render_info.x[i],render_info.y[i],render_info.z[i]);
+    }
+    part_offset += render_info.n_liquid_particles;
+    if( not display_boundary ) {;
+        for( int i = part_offset; i < part_offset + render_info.n_boundary_particles; i++ ) {
+            glUniform3f(color_uniform, color_buffer[3*i], color_buffer[3*i+1], color_buffer[3*i+2]);
+            draw_element(render_info.x[i],render_info.y[i],render_info.z[i]);
+        }
+    }
+    part_offset += render_info.n_boundary_particles;
+    if( not display_mobile ) {;
+        for( int i = part_offset; i < part_offset + render_info.n_mobile_particles; i++ ) {
+            glUniform3f(color_uniform, color_buffer[3*i], color_buffer[3*i+1], color_buffer[3*i+2]);
+            draw_element(render_info.x[i],render_info.y[i],render_info.z[i]);
+        }
+    }
+
+}
+
 
 
 void OpenGL_Renderer::reshape(int x, int y)
@@ -490,7 +764,9 @@ void OpenGL_Renderer::reshape(int x, int y)
 
 void OpenGL_Renderer::set_grid_color()
 {
-    size_t nparticles = render_info.n_particles;
+    size_t nparticles;
+    if(display_boundary) nparticles = render_info.n_liquid_particles;
+    else nparticles = render_info.n_total_particles;
     //Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
     for( size_t i = 0; i < nparticles; i++ ) {
         size_t gi,gj,gk;
@@ -510,10 +786,13 @@ void OpenGL_Renderer::set_grid( Uniform_Grid *ug )
 void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
 {
     //Uniform_Grid ug(0,0,0, 1,1,1, 0.1,0.1,0.1);
-    //ug.build(render_info.x,render_info.y,render_info.z,render_info.n_particles);
+    //ug.build(render_info.x,render_info.y,render_info.z,render_info.n_liquid_particles);
    
+    size_t nparticles = render_info.n_total_particles;
+    //if(display_boundary) nparticles = render_info.n_liquid_particles;
+    //else nparticles = render_info.n_total_particles;
 
-    for( size_t i = 0; i < render_info.n_particles; i++ ) {
+    for( size_t i = 0; i < nparticles; i++ ) {
         color_buffer[3*i]   = 0.;
         color_buffer[3*i+1] = 0.;
         color_buffer[3*i+2] = 1.;
@@ -562,13 +841,26 @@ void OpenGL_Renderer::set_neighbor_color( size_t particle_index )
 
 void OpenGL_Renderer::set_density_color()
 {
-    double min = 2000.;
-    double max = 3500.;
-    size_t nparticles = render_info.n_particles;
+    size_t nparticles = render_info.n_total_particles;
+    //if(display_boundary) nparticles = render_info.n_liquid_particles;
+    //else nparticles = render_info.n_total_particles;
+
+    //double min = 2000.;
+    //double max = 3500.;
+    
+    float min = std::numeric_limits<float>::max();
+    float max = std::numeric_limits<float>::min();
+    for( size_t i = 0; i < nparticles; i++ ) {
+        min = std::min(min,render_info.rho[i]);
+        max = std::max(max,render_info.rho[i]);
+    }
+
+
+
     for( size_t i = 0; i < nparticles; i++ ) {
         //std::cout<<(render_info.rho[i]-min)/(max-min)<<std::endl;
         //std::cout<<render_info.rho[i]<<std::endl;
-        float val = std::max(0.,std::min(1.,(render_info.rho[i]-min)/(max-min)));
+        float val = std::max(float(0.),std::min(float(1.),(render_info.rho[i]-min)/(max-min)));
         int index = val*256.;
         //std::cout<<val<<std::endl;
         //std::cout<<index<<std::endl;
@@ -581,14 +873,22 @@ void OpenGL_Renderer::set_density_color()
 
 void OpenGL_Renderer::set_pressure_color()
 {
-    double min = 5000.;
-    double max = 15000.;
-    size_t nparticles = render_info.n_particles;
+    size_t nparticles = render_info.n_total_particles;
+    //if(display_boundary) nparticles = render_info.n_liquid_particles;
+    //else nparticles = render_info.n_total_particles;
+    
+    float min = std::numeric_limits<float>::max();
+    float max = std::numeric_limits<float>::min();
+    for( size_t i = 0; i < nparticles; i++ ) {
+        min = std::min(min,render_info.p[i]);
+        max = std::max(max,render_info.p[i]);
+    }
+
     for( size_t i = 0; i < nparticles; i++ ) {
         //std::cout<<render_info.p[i]<<std::endl;
         //std::cout<<(render_info.p[i]-min)/(max-min)<<std::endl;
         //std::cout<<render_info.p[i]<<std::endl;
-        float val = std::max(0.,std::min(1.,(render_info.p[i]-min)/(max-min)));
+        float val = std::max(float(0.),std::min(float(1.),(render_info.p[i]-min)/(max-min)));
         int index = val*256.;
         //std::cout<<val<<std::endl;
         //std::cout<<index<<std::endl;

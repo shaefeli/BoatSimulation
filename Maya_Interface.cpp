@@ -44,9 +44,9 @@ void Maya_Interface::writeToMaya(size_t frameNr, float* x ,float* y, float* z, s
   	header <<"//Maya ASCII 2017 scene\n" <<  "//Name: frame" << frameNr << ".ma\n"<<"//Last modified: Fri, Nov 24, 2017 05:44:03 PM\n"<<"//Codeset 1252\n";
 
   	//Cube infos
-    double cube_sizeX = 10;
-    double cube_sizeY = 2;
-    double cube_sizeZ = 10;
+    double cube_sizeX = 5;
+    double cube_sizeY = 5;
+    double cube_sizeZ = 5;
     stringstream cube;
   	string cubeInfos1 = string("createNode transform -n \"pCube1\";\n")+
 							string("\trename -uid \"649B1D52-4142-B461-C245-F184D43846BB\";\n");
@@ -66,12 +66,13 @@ void Maya_Interface::writeToMaya(size_t frameNr, float* x ,float* y, float* z, s
 
 
   	//Particle infos
-  	double partScaleX = 1;
-  	double partScaleY = 1;
-  	double partScaleZ = 1;
+  	double partScaleX = 5;
+  	double partScaleY = 5;
+  	double partScaleZ = 5;
+  	stringstream partScale;
+  	partScale << "\tsetAttr \".s\" -type \"double3\" " << partScaleX << " " << partScaleY << " " << partScaleZ << ";\n";
   	string partInfo1 = string("createNode transform -n \"nParticle1\";\n")+
 						string("\trename -uid \"287A3003-4FDB-C9D2-628D-23864FCF4CEC\";\n");
-
 	string partInfo2 =	string("createNode nParticle -n \"nParticleShape1\" -p \"nParticle1\";\n")+
 							string("\trename -uid \"B44B925C-457C-8339-4764-FBA63FC2DCFD\";\n")+
 							string("\taddAttr -s false -ci true -sn \"lifespanPP\" -ln \"lifespanPP\" -dt \"doubleArray\";\n")+
@@ -86,8 +87,7 @@ void Maya_Interface::writeToMaya(size_t frameNr, float* x ,float* y, float* z, s
 							string("\tsetAttr -k off \".v\";\n")+
 							string("\tsetAttr \".gf\" -type \"Int32Array\" 0 ;\n");
 	stringstream particuleInfos;
-	particuleInfos << "createNode nucleus -n \"nucleus1\";\n" << "\trename -uid \"C11D1C29-44B6-A668-506C-24B574D4BE7C\";\n" << partInfo1 << partInfo2;
-	//particuleInfos << partInfo1 << "\tsetAttr \".s\" -type \"double3\" " << partScaleX << " " << partScaleY << " " << partScaleZ << ";\n" << partInfo2;
+	particuleInfos << "createNode nucleus -n \"nucleus1\";\n" << "\trename -uid \"C11D1C29-44B6-A668-506C-24B574D4BE7C\";\n" << partInfo1 << partScale.str() << partInfo2;
 
 
 	//particle positions

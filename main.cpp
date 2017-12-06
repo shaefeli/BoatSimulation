@@ -10,15 +10,16 @@ int main(int argc, char** argv){
     
     SimState state;
     state.dt = 5e-4;
+    //state.dt = 1e-5;
     state.g  = 9.8;
     state.h  = 0.0625;
     state.k  = 3.5;
     state.mu = 3.5;
     state.rho0 = 1000;
     
-    Basic_SPH_System bsph(5000,
+    Basic_SPH_System bsph(
                           0., 0., 0.,
-                          0.7, 0.7, 0.7,
+                          1., 1., 1.,
                           state.h , state.h , state.h );
     bsph.setSimState(state);
     bsph.finilizeInit();
@@ -26,7 +27,12 @@ int main(int argc, char** argv){
     OpenGL_Renderer renderer;
     Maya_Interface maya(5000);
 
-    renderer.render_info.n_particles = bsph.particles.n_particles;
+    //renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
+    renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
+    renderer.render_info.n_boundary_particles = bsph.particles.n_boundary_particles;
+    renderer.render_info.n_mobile_particles = bsph.particles.n_mobile_particles;
+    renderer.render_info.n_total_particles = bsph.particles.n_total_particles;
+
     renderer.render_info.x = bsph.particles.x;
     renderer.render_info.y = bsph.particles.y;
     renderer.render_info.z = bsph.particles.z;
@@ -47,13 +53,14 @@ int main(int argc, char** argv){
 
     renderer.init(argc,argv);
     unsigned int it=0;
+    bool render = false;
 
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << it * state.dt << "] sec\n";
         //std::cout<<"iteration "<<it<<std::endl;
 //        usleep(10000);
-        if(it == 0 || it==1 || it==2){
-            maya.writeToMaya(it,bsph.particles.x,bsph.particles.y,bsph.particles.z, bsph.particles.n_particles);
+        if(render and it > 300 && it < 400){
+            maya.writeToMaya(it,bsph.particles.x,bsph.particles.y,bsph.particles.z, bsph.particles.n_liquid_particles);
         } 
         bsph.run_step( state.dt );
         renderer.draw();

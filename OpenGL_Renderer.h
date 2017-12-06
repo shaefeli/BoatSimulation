@@ -33,6 +33,8 @@ class OpenGL_Renderer
     GLuint particles_VAO;
     GLuint particles_VBO, colors_VBO;
 
+    GLuint element_index_VBO, element_positions_VBO, element_normals_VBO;
+
     //uniforms
     GLuint MatrixID;
     GLuint color_uniform;
@@ -42,17 +44,24 @@ class OpenGL_Renderer
     glm::mat4 Model;
     glm::mat4 MVP;
 
+
     Uniform_Grid *ug;
 
     float *interleaved_buffer;
     float *color_buffer;
 
-    Render_mode render_mode = NONE;
 
     public:
+    bool display_boundary = true; //IF true not show, I know, but dont wanna change
+    bool display_mobile = false;
+    Render_mode render_mode = NONE;
     
         typedef struct {
-                            size_t n_particles;
+                            size_t n_liquid_particles;
+                            size_t n_boundary_particles;
+                            size_t n_mobile_particles;
+                            size_t n_total_particles;
+
                             const float *x;
                             const float *y;
                             const float *z;
@@ -80,7 +89,10 @@ class OpenGL_Renderer
 
         void draw_box();
         void draw_particles();
+
+        void draw_element( float x, float y, float z );
     
+        void draw_particles_elements( );
         //Function to set the color according to parameter
         void set_grid_color();
         void set_neighbor_color( size_t particle_index );

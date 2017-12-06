@@ -10,3 +10,4 @@ bin/
 PBS_sph.xcodeproj/
 CMakeLists.txt
 Makefile
+*.o
