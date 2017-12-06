@@ -46,11 +46,11 @@ void Basic_SPH_System::finilizeInit() {
     x_min[1] = 0.0f;
     x_min[2] = 0.0f;
     x_max[0] = 0.5;
-    x_max[1] = 0.2;
+    x_max[1] = 0.5;
     x_max[2] = 0.5;
     uint32_t max_sample_attempts = 30;
     uint32_t seed = 1981;
-    std::vector<Vec<float,3>> samples = thinks::poissonDiskSampling(this->simState.h*0.7,x_min, x_max,max_sample_attempts, seed);
+    std::vector<Vec<float,3>> samples = thinks::poissonDiskSampling(this->simState.h*0.75,x_min, x_max,max_sample_attempts, seed);
     
     particles.n_particles = samples.size();
     
@@ -67,6 +67,10 @@ void Basic_SPH_System::finilizeInit() {
     particles.Fz = (float *)malloc(particles.n_particles*sizeof(float));
     
     particles.rho = (float *)malloc(particles.n_particles*sizeof(float));
+
+    particles.nx = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.ny = (float *)malloc(particles.n_particles*sizeof(float));
+    particles.nz = (float *)malloc(particles.n_particles*sizeof(float));
     
     particles.p = (float *)malloc(particles.n_particles*sizeof(float));
     
@@ -105,6 +109,8 @@ void Basic_SPH_System::setSimState(SimState state){
     this->h3_15      = 15./(2 * M_PI * h3);
     this->h3_15_visc = 45./(M_PI * h6);
 
+    this->h9_32pi = 32. / (M_PI * h9);
+    this->h6_64 = h6 / 64.;
 }
 
 float Basic_SPH_System::distanceIJ(int i, int j){
@@ -132,6 +138,17 @@ float Basic_SPH_System::evalKernel_poly6(int &i, int &j, float &h){
     } else {
         return 0;
     }
+}
+
+float Basic_SPH_System::evalKernel_poly6_gradient(int &i, int &j, float &h) {
+    float r = this->distanceIJ(i,j);
+
+    if ( r <= h){
+        return -h9_315 * 6 * r * pow( h2 - r*r, 2);
+    } else {
+        return 0;
+    }
+
 }
 
 float Basic_SPH_System::evalKernel_spiky(int i, int j, float h){
@@ -182,6 +199,19 @@ float Basic_SPH_System::evalKernel_visc_laplacian(int &i, int &j, float &h) {
 }
 
 
+float Basic_SPH_System::evalC_spline(int &i, int &j, float &h) {
+    float r = this->distanceIJ(i, j);
+
+    if ( r <= h && r > h * 0.5f){
+        return h9_32pi * powf(h*r - r*r,3);
+    }
+    else if ( r > 0.f && r <= h * 0.5f ){
+        return h9_32pi * (2 * powf(h*r - r*r,3) - h6_64 );
+    }
+
+    return 0.f;
+}
+
 void Basic_SPH_System::update_velocities_dummy(float dt)
 {
     for( size_t i = 0; i < particles.n_particles; i++ ) {
@@ -225,6 +255,47 @@ void Basic_SPH_System::calculate_Densities(){
     }
 }
 
+void Basic_SPH_System::calculate_Curvatures() {
+    std::vector<size_t> near_cells;
+    // iterate ALL particles in the system
+    for(int i = 0; i < this->particles.n_particles; i++){
+        this->particles.nx[i] = 0;
+        this->particles.ny[i] = 0;
+        this->particles.nz[i] = 0;
+
+        near_cells.clear();
+        this->uniform_grid.query_neighbors(
+                this->particles.x[i],
+                this->particles.y[i],
+                this->particles.z[i],
+                near_cells
+        );
+
+        // iterate cells
+
+        for (auto cellId : near_cells){
+            size_t *cell     = this->uniform_grid.cells[    cellId];
+            size_t cell_size = this->uniform_grid.cell_size[cellId];
+
+            Vector3T<float> ijVec;
+            for (int j = 0; j < cell_size; j++){
+                auto particleID = static_cast<int>(cell[j]); // in equations that's our J index
+                ijVec = this->ij_vector(i, particleID);
+
+                float n_val = this->particles.mass / this->particles.rho[particleID] * this->evalKernel_poly6_gradient(i,particleID,simState.h);
+                this->particles.nx[i] += n_val * ijVec.x();
+                this->particles.ny[i] += n_val * ijVec.y();
+                this->particles.nz[i] += n_val * ijVec.z();
+            }
+        }
+
+        this->particles.nx[i] *= this->simState.h;
+        this->particles.ny[i] *= this->simState.h;
+        this->particles.nz[i] *= this->simState.h;
+    }
+
+}
+
 void Basic_SPH_System::calculate_Pressures() {
     float rho0 = this->simState.rho0;
     float k = this->simState.k;
@@ -241,6 +312,11 @@ void Basic_SPH_System::calculate_Forces() {
     std::vector<size_t> near_cells;
     // iterate ALL particles in the system
     for(int i = 0; i < this->particles.n_particles; i++){
+
+        this->particles.Fx[i] = 0.f;
+        this->particles.Fy[i] = 0.f;
+        this->particles.Fz[i] = 0.f;
+
         near_cells.clear();
         this->uniform_grid.query_neighbors(
                 this->particles.x[i],
@@ -258,10 +334,24 @@ void Basic_SPH_System::calculate_Forces() {
         float F_press_y = 0.0f;
         float F_press_z = 0.0f;
 
+        float F_coh_x = 0.0f;
+        float F_coh_y = 0.0f;
+        float F_coh_z = 0.0f;
+
+        float F_cur_x = 0.0f;
+        float F_cur_y = 0.0f;
+        float F_cur_z = 0.0f;
+
+        float F_st_x = 0.0f;
+        float F_st_y = 0.0f;
+        float F_st_z = 0.0f;
+
         float F_ext_y = - this->particles.mass * this->simState.g; // GRAVITY
 
         float pi = this->particles.p[i];
         float rhoi = this->particles.rho[i];
+
+
         // iterate cells
         for (auto cellId : near_cells){
             size_t *cell     = this->uniform_grid.cells[    cellId];
@@ -278,6 +368,7 @@ void Basic_SPH_System::calculate_Forces() {
 
                 // Calc Force from pressure
                 Vector3T<float> ijVec = this->ij_vector(i, particleID);
+
 //                std::cout << "[ " << i << " - " << particleID << " ] = " << sqrt(ijVec.squaredLength()) << std::endl;
                 float gradP =  this->evalkernel_spiky_gradient(i, particleID, this->simState.h);
                 gradP *=  rhoi * mj * ( pi /(rhoi * rhoi) + pj / (rhoj * rhoj) );
@@ -287,18 +378,34 @@ void Basic_SPH_System::calculate_Forces() {
                 F_press_z += - mi/rhoi * gradP * ijVec.z();
 
 
-                // Calc Force from viscosity
-                float F_visc = this->simState.mu *this->evalKernel_visc_laplacian(i,j,this->simState.h);
+                ijVec.normalize();
+                float F_coh = -this->gamma * mi * mj * this->evalC_spline(i,particleID, this->simState.h);
+                F_coh_x = F_coh * ijVec.x();
+                F_coh_y = F_coh * ijVec.y();
+                F_coh_z = F_coh * ijVec.z();
 
-                F_visc_x +=  mi * F_visc / rhoi * (this->particles.vx[j] - this->particles.vx[i]) / rhoj;
-                F_visc_y +=  mi * F_visc / rhoi * (this->particles.vy[j] - this->particles.vy[i]) / rhoj;
-                F_visc_z +=  mi * F_visc / rhoi * (this->particles.vz[j] - this->particles.vz[i]) / rhoj;
+                F_cur_x = -this->gamma * mi * ( this->particles.nx[i] - this->particles.nx[particleID] );
+                F_cur_y = -this->gamma * mi * ( this->particles.ny[i] - this->particles.ny[particleID] );
+                F_cur_z = -this->gamma * mi * ( this->particles.nz[i] - this->particles.nz[particleID] );
+
+
+                float Kij = 2 * this->simState.rho0 / (particles.rho[i] + particles.rho[particleID]);
+                F_st_x += Kij * (F_coh_x + F_cur_x);
+                F_st_y += Kij * (F_coh_y + F_cur_y);
+                F_st_z += Kij * (F_coh_z + F_cur_z);
+
+                // Calc Force from viscosity
+                float F_visc = this->simState.mu *this->evalKernel_visc_laplacian(i,particleID,this->simState.h);
+
+                F_visc_x +=  mi * F_visc / rhoi * (this->particles.vx[particleID] - this->particles.vx[i]) / rhoj;
+                F_visc_y +=  mi * F_visc / rhoi * (this->particles.vy[particleID] - this->particles.vy[i]) / rhoj;
+                F_visc_z +=  mi * F_visc / rhoi * (this->particles.vz[particleID] - this->particles.vz[i]) / rhoj;
             }
         }
         
-        this->particles.Fx[i] = F_press_x  +  F_visc_x;
-        this->particles.Fy[i] = F_press_y  +  F_visc_y + F_ext_y;
-        this->particles.Fz[i] = F_press_z  +  F_visc_z;
+        this->particles.Fx[i] = F_press_x  +  F_visc_x + F_st_x;
+        this->particles.Fy[i] = F_press_y  +  F_visc_y + F_st_y + F_ext_y;
+        this->particles.Fz[i] = F_press_z  +  F_visc_z + F_st_z;
 
 //        / rhoi
 //        / rhoi
@@ -347,6 +454,7 @@ void Basic_SPH_System::run_step(float dt)
 
     this->calculate_Densities();
     this->calculate_Pressures();
+    this->calculate_Curvatures();
     this->calculate_Forces();
     
     float m  = this->particles.mass;
@@ -389,6 +497,10 @@ Basic_SPH_System::~Basic_SPH_System(){
     free(particles.vx);
     free(particles.vy);
     free(particles.vz);
+
+    free(particles.nx);
+    free(particles.ny);
+    free(particles.nz);
 
     free(particles.rho);
     free(particles.p);

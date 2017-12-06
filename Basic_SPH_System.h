@@ -32,6 +32,11 @@ typedef struct {
     float *Fx;
     float *Fy;
     float *Fz;
+
+    // ! Curvatures
+    float *nx;
+    float *ny;
+    float *nz;
     
     // densities
     float *rho;
@@ -67,6 +72,7 @@ private:
      */
     void calculate_Forces();
     void calculate_Pressures();
+    void calculate_Curvatures(); // for F _ surface tension calculation
 //    void calculate_Fvisc();
     void calculate_Densities();
     
@@ -74,11 +80,15 @@ private:
      Different kernels for different properties
      */
     float evalKernel_poly6(int &i, int &j, float &h);
+    float evalKernel_poly6_gradient(int &i, int &j, float &h);
+
     float evalKernel_spiky(int i, int j, float h);
     float evalkernel_spiky_gradient(int &i, int &j, float &h);
 
     float evalKernel_visc( int i, int j, float h);
     float evalKernel_visc_laplacian(int &i, int &j, float &h);
+
+    float evalC_spline(int &i, int &j, float &h);
     
     // distance between particles
     Vector3T<float> ij_vector(int i,int j);
@@ -90,6 +100,10 @@ private:
     float h6_15_grad;
     float h3_15;
     float h3_15_visc;
+    float h9_32pi;
+    float h6_64;
+
+    float gamma = 0.5; // Surface tension coefficient
 
     bool flag_finilized = false;
     

@@ -18,7 +18,7 @@ int main(int argc, char** argv){
     
     Basic_SPH_System bsph(5000,
                           0., 0., 0.,
-                          0.5, .5, .5,
+                          0.7, 0.7, 0.7,
                           state.h , state.h , state.h );
     bsph.setSimState(state);
     bsph.finilizeInit();

@@ -11,6 +11,7 @@
 #include <string>
 #include <cstdio>
 #include <assert.h>
+#include <math.h>
 
 using namespace std;
 // Simple 3D vector class
