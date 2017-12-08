@@ -3,14 +3,12 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
-//#include <CGAL/Simple_cartesian.h>
+
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_incremental_builder_3.h>
-#include <CGAL/Polyhedron_3.h>
-
-
-#include <CGAL/Polyhedron_3.h>
 #include <CGAL/Nef_polyhedron_3.h>
+
 #include <CGAL/IO/Nef_polyhedron_iostream_3.h>
 #include <CGAL/Nef_3/SNC_indexed_items.h>
 #include <CGAL/convex_decomposition_3.h> 
@@ -129,11 +127,26 @@ void load_model_data()
     for( int i = 0; i < shapes.size(); i++ ) {
         My_Builder<HalfedgeDS> builder(attrib,shapes[i],materials);
         Ps[i].delegate(builder);
+        std::cout<<"Is closed:"<<Ps[i].is_closed()<<std::endl;
     }
 
-    std::vector<Nef_polyhedron_3> nPs;
+    //std::vector<Nef_polyhedron_3> nPs(Ps);
 
-    //std::cout<<P<<std::endl;
+    /*
+    CGAL::convex_decomposition_3(N);
+    std::list<Polyhedron_3> convex_parts;
+          
+    //the first volume is the outer volume, which is 
+    //ignored in the decomposition
+    Volume_const_iterator ci = ++N.volumes_begin();
+    for( ; ci != N.volumes_end(); ++ci) {
+        if(ci->mark()) {
+            Polyhedron_3 P;
+            N.convert_inner_shell_to_polyhedron(ci->shells_begin(), P);
+            convex_parts.push_back(P);
+        }
+    }
+    */
 
     /*
     // Loop over shapes
