@@ -1,4 +1,4 @@
-LIBRARIES=  -lglfw -lGLEW -lglut -lGL -lGLU -Ipoisson-disk-sampling/include -IOBJ-Loader -Itinyobjloader
+LIBRARIES= -lCGAL -lglfw -lGLEW -lglut -lGL -lGLU -Ipoisson-disk-sampling/include -IOBJ-Loader -Itinyobjloader
 #COMPILER_FLAGS = -Wall -pedantic
 COMPILER_FLAGS = -O2 -std=c++11
 

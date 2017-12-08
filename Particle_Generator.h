@@ -6,7 +6,7 @@
 //#include <tiny_obj_loader.h>
 
 
-
+/*
 class Boat_Model 
 {
     std::vector<int> face;
@@ -15,6 +15,7 @@ class Boat_Model
     std::vector<float> normals;
     std::vector<float> texcoords;
 }
+*/
 
 
 
