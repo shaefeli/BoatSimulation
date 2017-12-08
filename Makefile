@@ -1,4 +1,4 @@
-LIBRARIES=  -lglfw -lGLEW -lglut -lGL -lGLU
+LIBRARIES=  -lglfw -lGLEW -lglut -lGL -lGLU -Ipoisson-disk-sampling/include -IOBJ-Loader -Itinyobjloader
 #COMPILER_FLAGS = -Wall -pedantic
 COMPILER_FLAGS = -O2 -std=c++11
 
@@ -7,7 +7,7 @@ all: main.o Basic_SPH_System.o Particle_Generator.o OpenGL_Renderer.o Uniform_Gr
 main.o: main.cpp
 	g++ -c main.cpp $(COMPILER_FLAGS) $(LIBRARIES)
 Basic_SPH_System.o: Basic_SPH_System.cpp Basic_SPH_System.h
-	g++ -c Basic_SPH_System.cpp $(COMPILER_FLAGS) $(LIBRARIES)  -Ipoisson-disk-sampling/include
+	g++ -c Basic_SPH_System.cpp $(COMPILER_FLAGS) $(LIBRARIES) 
 OpenGL_Renderer.o: OpenGL_Renderer.cpp Uniform_Grid.h
 	g++ -c OpenGL_Renderer.cpp viridis.cpp $(COMPILER_FLAGS)  $(LIBRARIES) 
 Uniform_Grid.o: Uniform_Grid.cpp Uniform_Grid.h

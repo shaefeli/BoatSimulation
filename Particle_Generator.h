@@ -2,6 +2,23 @@
 #define __PARTICLE_GENERATOR__
 #include <vector>
 #include <cstddef>
+//#include <Source/OBJ_Loader.h>
+//#include <tiny_obj_loader.h>
+
+
+
+class Boat_Model 
+{
+    std::vector<int> face;
+
+    std::vector<float> vertexs;
+    std::vector<float> normals;
+    std::vector<float> texcoords;
+}
+
+
+
+extern void load_model_data();
 
 
 

@@ -2,6 +2,7 @@
 #include "Basic_SPH_System.h"
 #include "Maya_Interface.h"
 #include "unistd.h"
+#include "Particle_Generator.h"
 #include <iostream>
 
 
@@ -55,17 +56,31 @@ int main(int argc, char** argv){
     unsigned int it=0;
     bool render = false;
 
+    load_model_data();
+
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << it * state.dt << "] sec\n";
         //std::cout<<"iteration "<<it<<std::endl;
-//        usleep(10000);
+        //usleep(10000);
         if(render and it > 300 && it < 400){
-            maya.writeToMaya(it,bsph.particles.x,bsph.particles.y,bsph.particles.z, bsph.particles.n_liquid_particles);
+            maya.writeToMaya(it,bsph.particles.x,
+                                bsph.particles.y,
+                                bsph.particles.z,
+                                bsph.particles.n_liquid_particles);
         } 
         bsph.run_step( state.dt );
         renderer.draw();
         it++;
     }
 
+
+
     return 0;
 }
+
+
+
+
+
+
+
