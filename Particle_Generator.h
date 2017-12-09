@@ -19,7 +19,12 @@ class Boat_Model
 
 
 
-extern void load_model_data();
+extern void load_model_data( float h,
+                        std::vector<float> &xv,
+                        std::vector<float> &yv,
+                        std::vector<float> &zv,
+                        size_t &n_particles
+        );
 
 
 

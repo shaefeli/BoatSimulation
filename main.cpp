@@ -56,8 +56,7 @@ int main(int argc, char** argv){
     unsigned int it=0;
     bool render = false;
 
-    load_model_data();
-    return 0;
+    //load_model_data( 0.15 );
 
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << it * state.dt << "] sec\n";

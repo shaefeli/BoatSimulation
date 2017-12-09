@@ -1,153 +1,64 @@
 #include "Particle_Generator.h"
 #include <iostream>
+#include <limits>
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Polyhedron_3.h>
-#include <CGAL/Polyhedron_incremental_builder_3.h>
 #include <CGAL/Nef_polyhedron_3.h>
+#include <CGAL/Polyhedron_incremental_builder_3.h>
 
-#include <CGAL/IO/Nef_polyhedron_iostream_3.h>
-#include <CGAL/Nef_3/SNC_indexed_items.h>
-#include <CGAL/convex_decomposition_3.h> 
+#include <CGAL/Surface_mesh.h>
+#include <CGAL/convex_hull_3.h>
 
+#include <thinks/poissonDiskSampling.hpp>
 
 //typedef CGAL::Simple_cartesian<double>               Kernel;
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
 
 typedef Kernel::Point_3                              Point_3;
-typedef CGAL::Polyhedron_3<Kernel>                   Polyhedron;
-typedef Polyhedron::Facet_iterator                   Facet_iterator;
-typedef Polyhedron::Halfedge_around_facet_circulator Halfedge_facet_circulator;
+typedef Kernel::Vector_3                             Vector_3;
+typedef CGAL::Polyhedron_3<Kernel>                   Polyhedron_3;
+typedef CGAL::Nef_polyhedron_3<Kernel>               Nef_polyhedron_3;
 
-typedef CGAL::Nef_polyhedron_3<Kernel, CGAL::SNC_indexed_items> Nef_polyhedron_3;
+typedef CGAL::Surface_mesh<Point_3> Surface_mesh;
+
+typedef Nef_polyhedron_3::Vertex_const_handle Vertex_const_handle;
+typedef Nef_polyhedron_3::Halfedge_const_handle Halfedge_const_handle;
+typedef Nef_polyhedron_3::Halffacet_const_handle Halffacet_const_handle;
+typedef Nef_polyhedron_3::Volume_const_handle Volume_const_handle;
 typedef Nef_polyhedron_3::Volume_const_iterator Volume_const_iterator;
+typedef Nef_polyhedron_3::Object_handle Object_handle;
 
 
 
-typedef Polyhedron::HalfedgeDS             HalfedgeDS;
-
-template <class HDS>
-class My_Builder : public CGAL::Modifier_base<HDS> {
+template <typename T, std::size_t N>
+class Vec
+{
 public:
-    tinyobj::attrib_t attrib;
-    std::vector<tinyobj::shape_t> shapes;
-    std::vector<tinyobj::material_t> materials;
-    My_Builder(
-            tinyobj::attrib_t attrib,
-            std::vector<tinyobj::shape_t> &shapes,
-            std::vector<tinyobj::material_t> &materials
-            ) {
-        this->attrib = attrib;
-        this->shapes = shapes;
-        this->materials = materials;
-    }
-    void operator()( HDS& hds) {
-        // Postcondition: hds is a valid polyhedral surface.
-        /*
-        CGAL::Polyhedron_incremental_builder_3<HDS> B( hds, true);
-        B.begin_surface( 3, 1, 6);
-        typedef typename HDS::Vertex   Vertex;
-        typedef typename Vertex::Point Point;
-        B.add_vertex( Point( 0, 0, 0));
-        B.add_vertex( Point( 1, 0, 0));
-        B.add_vertex( Point( 0, 1, 0));
-        B.begin_facet();
-        B.add_vertex_to_facet( 0);
-        B.add_vertex_to_facet( 1);
-        B.add_vertex_to_facet( 2);
-        B.end_facet();
-        B.end_surface();
-        */
-        CGAL::Polyhedron_incremental_builder_3<HDS> B( hds, true );
-
-        long n_vertices = 0;
-        long n_faces = 0;
-        for (size_t s = 0; s < shapes.size(); s++) {
-            n_faces += shapes[s].mesh.num_face_vertices.size();
-        }
-        n_vertices = attrib.vertices.size()/3;
-
-        //B.begin_surface(n_vertices,n_faces);
-        B.begin_surface(n_vertices,n_faces,CGAL::Polyhedron_incremental_builder_3<HDS>::ABSOLUTE_INDEXING);
-        //Add all vertices
-        for( size_t i = 0; i < n_vertices; i++ ) {
-                tinyobj::real_t vx = attrib.vertices[3*i+0];
-                tinyobj::real_t vy = attrib.vertices[3*i+1];
-                tinyobj::real_t vz = attrib.vertices[3*i+2];
-                B.add_vertex(Point_3(vx,vy,vz));
-        }
-
-        
-        size_t poly_vertex_offset = 0;
-        for (size_t s = 0; s < 1 /*shapes.size()*/; s++) {
-            std::cout<<"shape: "<<shapes[s].name<<std::endl;
-            // Loop over faces(polygon)
-            
-            for( size_t i = 0; i < shapes[s].mesh.indices.size(); i++ ) {
-                //std::cerr<<int(shapes[s].mesh.num_face_vertices[i])<<std::endl;;
-                //assert(int(shapes[s].mesh.num_face_vertices[i]) == 3);//Only triangles
-
-                size_t index_offset = 0;
-                for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
-                    int fv = shapes[s].mesh.num_face_vertices[f];
-
-                    // Loop over vertices in the face.
-                    B.begin_facet();
-                    for (size_t v = 0; v < fv; v++) {
-                        // access to vertex
-                        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-                        size_t actual_index = idx.vertex_index;
-                        B.add_vertex_to_facet(actual_index);
-
-                    }
-                    B.end_facet();
-
-                    index_offset += fv;
-
-                    // per-face material
-                    shapes[s].mesh.material_ids[f];
-                }
-                
-            }
-            /*
-            size_t index_offset = 0;
-            for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
-                int fv = shapes[s].mesh.num_face_vertices[f];
-
-                // Loop over vertices in the face.
-                B.begin_facet();
-                for (size_t v = 0; v < fv; v++) {
-                    // access to vertex
-                    //tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-
-                }
-                B.end_facet();
-
-                index_offset += fv;
-
-                // per-face material
-                shapes[s].mesh.material_ids[f];
-            }
-            poly_vertex_offset += shapes[s].mesh.indices.size();
-            */
-
-        }
-        B.end_surface();
-    }
-
-
+    typedef T value_type;
+    static const std::size_t size = N;
+    Vec() {}
+    T& operator[](std::size_t i) { return _data[i]; }
+    const T& operator[](std::size_t i) const { return _data[i]; }
+private:
+    T _data[N];
 };
 
 
 
-void load_model_data()
+void load_model_data(   float h,
+                        std::vector<float> &xv,
+                        std::vector<float> &yv,
+                        std::vector<float> &zv,
+                        size_t &n_particles 
+        )
 {
 
 
-    std::string inputfile = "Models/watercraftPack_004.obj";
+    std::string inputfile = "Models/watercraftPack_001.obj";
     std::string mtlfolder = "Models/";
     
     tinyobj::attrib_t attrib;
@@ -161,39 +72,58 @@ void load_model_data()
       std::cerr << err << std::endl;
     }
 
-    //std::vector<Polyhedron> Ps(shapes.size());
-    //for( int i = 0; i < shapes.size(); i++ ) {
-    //    My_Builder<HalfedgeDS> builder(attrib,shapes[i],materials);
-    //    Ps[i].delegate(builder);
-    //    std::cout<<"Is closed:"<<Ps[i].is_closed()<<std::endl;
-    //}
+    std::vector<Polyhedron_3> Ps(shapes.size());
 
-    //std::vector<Nef_polyhedron_3> nPs(Ps);
+    
+    float minx = std::numeric_limits<float>::max();
+    float miny = std::numeric_limits<float>::max();
+    float minz = std::numeric_limits<float>::max();
 
-    Polyhedron P;
-    My_Builder<HalfedgeDS> builder(attrib,shapes,materials);
-    P.delegate(builder);
+    float maxx = std::numeric_limits<float>::min();
+    float maxy = std::numeric_limits<float>::min();
+    float maxz = std::numeric_limits<float>::min();
 
+    float avgx = 0.;
+    float avgy = 0.;
+    float avgz = 0.;
 
-    /*
-    CGAL::convex_decomposition_3(N);
-    std::list<Polyhedron_3> convex_parts;
-          
-    //the first volume is the outer volume, which is 
-    //ignored in the decomposition
-    Volume_const_iterator ci = ++N.volumes_begin();
-    for( ; ci != N.volumes_end(); ++ci) {
-        if(ci->mark()) {
-            Polyhedron_3 P;
-            N.convert_inner_shell_to_polyhedron(ci->shells_begin(), P);
-            convex_parts.push_back(P);
-        }
+    for( size_t i = 0; i < attrib.vertices.size()/3; i++ ) {
+        tinyobj::real_t vx = attrib.vertices[3*i+0];
+        tinyobj::real_t vy = attrib.vertices[3*i+1];
+        tinyobj::real_t vz = attrib.vertices[3*i+2];
+
+        avgx += vx;
+        avgy += vy;
+        avgz += vz;
+
+        minx = std::min(minx,vx); 
+        miny = std::min(miny,vy);
+        minz = std::min(minz,vz);
+
+        maxx = std::max(maxx,vx);
+        maxy = std::max(maxy,vy);
+        maxz = std::max(maxz,vz);
     }
-    */
+    avgx /= attrib.vertices.size()/3;
+    avgy /= attrib.vertices.size()/3;
+    avgz /= attrib.vertices.size()/3;
 
-    /*
+
+    //Center to 0,0
+    maxx -= avgx;
+    maxy -= avgy;
+    maxz -= avgz;
+
+    minx -= avgx;
+    miny -= avgy;
+    minz -= avgz;
+
+   float scale = 0.25;
+
+
     // Loop over shapes
-    for (size_t s = 0; s < shapes.size(); s++) {
+    for (size_t s = 0; s < shapes.size(); s++) { //Only work with last one for now :I
+      std::vector<Point_3> points;
       // Loop over faces(polygon)
       size_t index_offset = 0;
       for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
@@ -203,9 +133,13 @@ void load_model_data()
         for (size_t v = 0; v < fv; v++) {
           // access to vertex
           tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-          tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
-          tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
-          tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
+          tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0] - avgx;
+          tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1] - avgy;
+          tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2] - avgz;
+          vx *= scale;
+          vy *= scale;
+          vz *= scale;
+
 
           //Only want information about the positions of the vertices to create the polygons...
           //tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
@@ -213,6 +147,7 @@ void load_model_data()
           //tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
           //tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
           //tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
+          points.push_back(Point_3(vx,vy,vz));
 
           // Optional: vertex colors
           // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
@@ -224,8 +159,127 @@ void load_model_data()
         // per-face material
         shapes[s].mesh.material_ids[f];
       }
+      CGAL::convex_hull_3(points.begin(), points.end(), Ps[s]);
+      std::cout << "The convex hull contains " << Ps[s].size_of_vertices() << " vertices" << std::endl;
+    }
+    maxx *= scale;
+    maxy *= scale;
+    maxz *= scale;
+    minx *= scale;
+    miny *= scale;
+    minz *= scale;
+    avgx *= scale;
+    avgy *= scale;
+    avgz *= scale;
+
+
+    //std::vector<Nef_polyhedron_3> NPs(Ps.size());
+    Nef_polyhedron_3 NP;
+    for( int i = 0; i < Ps.size(); i++ ) NP += Nef_polyhedron_3(Ps[i]);
+
+    std::cout<<avgx<<std::endl;
+    std::cout<<avgy<<std::endl;
+    std::cout<<avgz<<std::endl;
+    std::cout<<std::endl;
+    std::cout<<minx<<std::endl;
+    std::cout<<miny<<std::endl;
+    std::cout<<minz<<std::endl;
+    std::cout<<std::endl;
+    std::cout<<maxx<<std::endl;
+    std::cout<<maxy<<std::endl;
+    std::cout<<maxz<<std::endl;
+
+
+
+    //Poisson sample the bounding box
+
+
+
+    /*
+    Vertex_const_handle v;
+    Halfedge_const_handle e;
+    Halffacet_const_handle f;
+    Volume_const_handle c;
+
+    Object_handle o = NP.locate(Point_3(0.5,0.5,0.5));
+    if(CGAL::assign(v,o)) {
+      std::cout << "Locating vertex" << std::endl;
+    }
+    else if(CGAL::assign(e,o)) {
+      std::cout << "Locating edge" << std::endl;
+    }
+    else if(CGAL::assign(f,o)) {
+      std::cout << "Locating facet" << std::endl;
+    }
+    else if(CGAL::assign(c,o)) {
+      std::cout << "Locating volume" << std::endl;
+      //for( auto vi = NP.volumes_begin(); vi != NP.volumes_end(); ++vi ) {
+        //std::cout<<(vi->mark())<<std::endl;
+      //}
+      std::cout<<c->mark()<<std::endl;
     }
     */
+    Vec<float,3> x_min, x_max;
+    x_min[0] = minx;
+    x_min[1] = miny;
+    x_min[2] = minz;
+
+    x_max[0] = maxx;
+    x_max[1] = maxy;
+    x_max[2] = maxz;
+    uint32_t max_sample_attempts = 30;
+    uint32_t seed = 1981;
+    std::vector<Vec<float,3>> bounding_box_samples 
+                    = thinks::poissonDiskSampling(  h,
+                                                    x_min,
+                                                    x_max,
+                                                    max_sample_attempts,
+                                                    seed);
+
+   
+   std::vector<float> interior_points_x;
+   std::vector<float> interior_points_y;
+   std::vector<float> interior_points_z;
+   size_t n_interior_points = 0;
+   for( size_t i = 0; i < bounding_box_samples.size(); i++ ) {
+        Point_3 p(  bounding_box_samples[i][0],
+                    bounding_box_samples[i][1],
+                    bounding_box_samples[i][2]);
+        Vertex_const_handle v;
+        Halfedge_const_handle e;
+        Halffacet_const_handle f;
+        Volume_const_handle c;
+
+        Object_handle o = NP.locate(p);
+        if(CGAL::assign(v,o)) {
+          std::cout << "Locating vertex" << std::endl;
+        }
+        else if(CGAL::assign(e,o)) {
+          std::cout << "Locating edge" << std::endl;
+        }
+        else if(CGAL::assign(f,o)) {
+          std::cout << "Locating facet" << std::endl;
+        }
+        else if(CGAL::assign(c,o)) {
+          //std::cout << "Locating volume" << std::endl;
+          std::cout<<c->mark();
+          if( c->mark() ) {
+            interior_points_x.push_back(bounding_box_samples[i][0]);
+            interior_points_y.push_back(bounding_box_samples[i][1]);
+            interior_points_z.push_back(bounding_box_samples[i][2]);
+            n_interior_points++;
+          }
+        }
+        
+
+   }
+   xv = interior_points_x;
+   yv = interior_points_y;
+   zv = interior_points_z;
+   n_particles = n_interior_points;
+   std::cout<<std::endl;
+
+
 
 }
 

@@ -44,6 +44,10 @@ class OpenGL_Renderer
     glm::mat4 Model;
     glm::mat4 MVP;
 
+    
+    float xcam = 2.;
+    float ycam = 1.5;
+    float zcam = 1.5;
 
     Uniform_Grid *ug;
 

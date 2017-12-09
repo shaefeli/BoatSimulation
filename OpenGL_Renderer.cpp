@@ -49,6 +49,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     {
         oglr->display_mobile = not oglr->display_mobile;
     }
+    else if ( oglr != NULL && key == GLFW_KEY_Q && action == GLFW_PRESS)
+    {
+        oglr->display_mobile = not oglr->display_mobile;
+    }
+    else if ( oglr != NULL && key == GLFW_KEY_R && action == GLFW_PRESS)
+    {
+        oglr->display_mobile = not oglr->display_mobile;
+    }
+
 }
 
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path) {
@@ -195,7 +204,7 @@ bool OpenGL_Renderer::init( int argc, char** argv)
 
 	Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
 	View       = glm::lookAt(
-                        glm::vec3(2,1.5,1.5), // Camera is at (4,3,3), in World Space
+                        glm::vec3(xcam,ycam,zcam), // Camera is at (4,3,3), in World Space
                         glm::vec3(0,0,0), // and looks at the origin
                         glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                    );
