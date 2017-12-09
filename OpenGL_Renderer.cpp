@@ -49,13 +49,45 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     {
         oglr->display_mobile = not oglr->display_mobile;
     }
-    else if ( oglr != NULL && key == GLFW_KEY_Q && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_A && action == GLFW_PRESS)
     {
-        oglr->display_mobile = not oglr->display_mobile;
+        oglr->xcam -= 0.25;
+        oglr->View = glm::lookAt(
+          glm::vec3(oglr->xcam,oglr->ycam,oglr->zcam), // Camera is at (4,3,3), in World Space
+          glm::vec3(0,0,0), // and looks at the origin
+          glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+               );
+	    oglr->MVP = oglr->Projection * oglr->View * oglr->Model;
     }
-    else if ( oglr != NULL && key == GLFW_KEY_R && action == GLFW_PRESS)
+    else if ( oglr != NULL && key == GLFW_KEY_D && action == GLFW_PRESS)
     {
-        oglr->display_mobile = not oglr->display_mobile;
+        oglr->xcam += 0.25;
+        oglr->View = glm::lookAt(
+          glm::vec3(oglr->xcam,oglr->ycam,oglr->zcam), // Camera is at (4,3,3), in World Space
+          glm::vec3(0,0,0), // and looks at the origin
+          glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+               );
+	    oglr->MVP = oglr->Projection * oglr->View * oglr->Model;
+    }
+    else if ( oglr != NULL && key == GLFW_KEY_W && action == GLFW_PRESS)
+    {
+        oglr->zcam += 0.25;
+        oglr->View = glm::lookAt(
+          glm::vec3(oglr->xcam,oglr->ycam,oglr->zcam), // Camera is at (4,3,3), in World Space
+          glm::vec3(0,0,0), // and looks at the origin
+          glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+               );
+	    oglr->MVP = oglr->Projection * oglr->View * oglr->Model;
+    }
+    else if ( oglr != NULL && key == GLFW_KEY_S && action == GLFW_PRESS)
+    {
+        oglr->zcam -= 0.25;
+        oglr->View = glm::lookAt(
+          glm::vec3(oglr->xcam,oglr->ycam,oglr->zcam), // Camera is at (4,3,3), in World Space
+          glm::vec3(0,0,0), // and looks at the origin
+          glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+               );
+	    oglr->MVP = oglr->Projection * oglr->View * oglr->Model;
     }
 
 }
@@ -626,7 +658,7 @@ void OpenGL_Renderer::draw_element( float x, float y, float z )
     //Transform
     Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
 	View       = glm::lookAt(
-                        glm::vec3(2,1.5,1.5), // Camera is at (4,3,3), in World Space
+                        glm::vec3(xcam,ycam,zcam), // Camera is at (4,3,3), in World Space
                         glm::vec3(0,0,0), // and looks at the origin
                         glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                    );

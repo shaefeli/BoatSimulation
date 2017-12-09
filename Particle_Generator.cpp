@@ -118,7 +118,7 @@ void load_model_data(   float h,
     miny -= avgy;
     minz -= avgz;
 
-   float scale = 0.25;
+   float scale = 0.12;
 
 
     // Loop over shapes

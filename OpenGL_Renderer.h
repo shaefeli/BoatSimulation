@@ -39,6 +39,7 @@ class OpenGL_Renderer
     GLuint MatrixID;
     GLuint color_uniform;
 
+    public:
     glm::mat4 Projection;
     glm::mat4 View;
     glm::mat4 Model;
@@ -55,7 +56,6 @@ class OpenGL_Renderer
     float *color_buffer;
 
 
-    public:
     bool display_boundary = true; //IF true not show, I know, but dont wanna change
     bool display_mobile = false;
     Render_mode render_mode = NONE;
