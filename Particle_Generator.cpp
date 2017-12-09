@@ -33,74 +33,112 @@ template <class HDS>
 class My_Builder : public CGAL::Modifier_base<HDS> {
 public:
     tinyobj::attrib_t attrib;
-    tinyobj::shape_t shape;
+    std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
     My_Builder(
             tinyobj::attrib_t attrib,
-            tinyobj::shape_t &shape,
+            std::vector<tinyobj::shape_t> &shapes,
             std::vector<tinyobj::material_t> &materials
             ) {
         this->attrib = attrib;
-        this->shape = shape;
+        this->shapes = shapes;
         this->materials = materials;
     }
     void operator()( HDS& hds) {
-      // Postcondition: hds is a valid polyhedral surface.
-      /*
-      CGAL::Polyhedron_incremental_builder_3<HDS> B( hds, true);
-      B.begin_surface( 3, 1, 6);
-      typedef typename HDS::Vertex   Vertex;
-      typedef typename Vertex::Point Point;
-      B.add_vertex( Point( 0, 0, 0));
-      B.add_vertex( Point( 1, 0, 0));
-      B.add_vertex( Point( 0, 1, 0));
-      B.begin_facet();
-      B.add_vertex_to_facet( 0);
-      B.add_vertex_to_facet( 1);
-      B.add_vertex_to_facet( 2);
-      B.end_facet();
-      B.end_surface();
-      */
-      CGAL::Polyhedron_incremental_builder_3<HDS> B( hds, true );
-
-      long n_vertices = shape.mesh.indices.size();
-      long n_faces = shape.mesh.num_face_vertices.size();
-      
-      std::cout<<"n_vertices:"<<n_vertices<<std::endl;
-      std::cout<<"n_faces:"<<n_faces<<std::endl;
-
-      B.begin_surface(n_vertices,n_faces);
-      //Add all vertices
-
-      std::cout<<"shape: "<<shape.name<<std::endl;
-      // Loop over faces(polygon)
-      size_t index_offset = 0;
-      for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++) {
-
-        int fv = shape.mesh.num_face_vertices[f];
-        assert(fv == 3);//Only triangles
-        // Loop over vertices in the face.
-        for (size_t v = 0; v < fv; v++) {
-          // access to vertex
-          tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
-          tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
-          tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
-          tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
-          B.add_vertex(Point_3( vx, vy, vz));
-        }
+        // Postcondition: hds is a valid polyhedral surface.
+        /*
+        CGAL::Polyhedron_incremental_builder_3<HDS> B( hds, true);
+        B.begin_surface( 3, 1, 6);
+        typedef typename HDS::Vertex   Vertex;
+        typedef typename Vertex::Point Point;
+        B.add_vertex( Point( 0, 0, 0));
+        B.add_vertex( Point( 1, 0, 0));
+        B.add_vertex( Point( 0, 1, 0));
         B.begin_facet();
-        for( int i = 0; i < 3; i++ ) {
-            B.add_vertex_to_facet(index_offset++);
-        }
+        B.add_vertex_to_facet( 0);
+        B.add_vertex_to_facet( 1);
+        B.add_vertex_to_facet( 2);
         B.end_facet();
-        //index_offset += fv;
+        B.end_surface();
+        */
+        CGAL::Polyhedron_incremental_builder_3<HDS> B( hds, true );
 
-        // per-face material
-        //shapes[s].mesh.material_ids[f];
-      }
-      B.end_surface();
+        long n_vertices = 0;
+        long n_faces = 0;
+        for (size_t s = 0; s < shapes.size(); s++) {
+            n_faces += shapes[s].mesh.num_face_vertices.size();
+        }
+        n_vertices = attrib.vertices.size()/3;
 
+        //B.begin_surface(n_vertices,n_faces);
+        B.begin_surface(n_vertices,n_faces,CGAL::Polyhedron_incremental_builder_3<HDS>::ABSOLUTE_INDEXING);
+        //Add all vertices
+        for( size_t i = 0; i < n_vertices; i++ ) {
+                tinyobj::real_t vx = attrib.vertices[3*i+0];
+                tinyobj::real_t vy = attrib.vertices[3*i+1];
+                tinyobj::real_t vz = attrib.vertices[3*i+2];
+                B.add_vertex(Point_3(vx,vy,vz));
+        }
+
+        
+        size_t poly_vertex_offset = 0;
+        for (size_t s = 0; s < 1 /*shapes.size()*/; s++) {
+            std::cout<<"shape: "<<shapes[s].name<<std::endl;
+            // Loop over faces(polygon)
+            
+            for( size_t i = 0; i < shapes[s].mesh.indices.size(); i++ ) {
+                //std::cerr<<int(shapes[s].mesh.num_face_vertices[i])<<std::endl;;
+                //assert(int(shapes[s].mesh.num_face_vertices[i]) == 3);//Only triangles
+
+                size_t index_offset = 0;
+                for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+                    int fv = shapes[s].mesh.num_face_vertices[f];
+
+                    // Loop over vertices in the face.
+                    B.begin_facet();
+                    for (size_t v = 0; v < fv; v++) {
+                        // access to vertex
+                        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+                        size_t actual_index = idx.vertex_index;
+                        B.add_vertex_to_facet(actual_index);
+
+                    }
+                    B.end_facet();
+
+                    index_offset += fv;
+
+                    // per-face material
+                    shapes[s].mesh.material_ids[f];
+                }
+                
+            }
+            /*
+            size_t index_offset = 0;
+            for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+                int fv = shapes[s].mesh.num_face_vertices[f];
+
+                // Loop over vertices in the face.
+                B.begin_facet();
+                for (size_t v = 0; v < fv; v++) {
+                    // access to vertex
+                    //tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+
+                }
+                B.end_facet();
+
+                index_offset += fv;
+
+                // per-face material
+                shapes[s].mesh.material_ids[f];
+            }
+            poly_vertex_offset += shapes[s].mesh.indices.size();
+            */
+
+        }
+        B.end_surface();
     }
+
+
 };
 
 
@@ -109,7 +147,7 @@ void load_model_data()
 {
 
 
-    std::string inputfile = "Models/watercraftPack_001.obj";
+    std::string inputfile = "Models/watercraftPack_004.obj";
     std::string mtlfolder = "Models/";
     
     tinyobj::attrib_t attrib;
@@ -123,14 +161,19 @@ void load_model_data()
       std::cerr << err << std::endl;
     }
 
-    std::vector<Polyhedron> Ps(shapes.size());
-    for( int i = 0; i < shapes.size(); i++ ) {
-        My_Builder<HalfedgeDS> builder(attrib,shapes[i],materials);
-        Ps[i].delegate(builder);
-        std::cout<<"Is closed:"<<Ps[i].is_closed()<<std::endl;
-    }
+    //std::vector<Polyhedron> Ps(shapes.size());
+    //for( int i = 0; i < shapes.size(); i++ ) {
+    //    My_Builder<HalfedgeDS> builder(attrib,shapes[i],materials);
+    //    Ps[i].delegate(builder);
+    //    std::cout<<"Is closed:"<<Ps[i].is_closed()<<std::endl;
+    //}
 
     //std::vector<Nef_polyhedron_3> nPs(Ps);
+
+    Polyhedron P;
+    My_Builder<HalfedgeDS> builder(attrib,shapes,materials);
+    P.delegate(builder);
+
 
     /*
     CGAL::convex_decomposition_3(N);

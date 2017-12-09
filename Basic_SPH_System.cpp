@@ -48,9 +48,9 @@ void Basic_SPH_System::finilizeInit() {
     x_min[1] = 0.0f;
     x_min[2] = 0.0f;
 
-    x_max[0] = 1.;
-    x_max[1] = 0.3;
-    x_max[2] = 1.;
+    x_max[0] = 0.7;
+    x_max[1] = 0.9;
+    x_max[2] = 0.5;
     uint32_t max_sample_attempts = 30;
     uint32_t seed = 1981;
     std::vector<Vec<float,3>> liquid_samples = thinks::poissonDiskSampling(this->simState.h*0.7,x_min, x_max,max_sample_attempts, seed);
@@ -92,7 +92,7 @@ void Basic_SPH_System::finilizeInit() {
     std::vector<float> z_mob;
     size_t n_mobile_particles;
 
-    generate_particle_cube(0.1,0.025, x_mob, y_mob, z_mob, n_mobile_particles);
+    generate_particle_cube(0.1,0.25, x_mob, y_mob, z_mob, n_mobile_particles);
 
     size_t mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
     particles.n_mobile_particles = n_mobile_particles;

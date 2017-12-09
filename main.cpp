@@ -57,7 +57,6 @@ int main(int argc, char** argv){
     bool render = false;
 
     load_model_data();
-    
     return 0;
 
     while(!glfwWindowShouldClose(renderer.getWindow())){
