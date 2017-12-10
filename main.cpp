@@ -62,12 +62,12 @@ int main(int argc, char** argv){
         std::cout << "[" << it * state.dt << "] sec\n";
         //std::cout<<"iteration "<<it<<std::endl;
         //usleep(10000);
-        if(render and it > 300 && it < 400){
-            maya.writeToMaya(it,bsph.particles.x,
-                                bsph.particles.y,
-                                bsph.particles.z,
-                                bsph.particles.n_liquid_particles);
-        } 
+//        if(render and it > 300 && it < 400){
+//            maya.writeToMaya(it,bsph.particles.x,
+//                                bsph.particles.y,
+//                                bsph.particles.z,
+//                                bsph.particles.n_liquid_particles);
+//        }
         bsph.run_step( state.dt );
         renderer.draw();
         it++;
