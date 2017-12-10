@@ -17,11 +17,16 @@ typedef struct {
 
 
 typedef struct {                    //particles of this type have index:
-    size_t n_liquid_particles;      //[0..n_liquid_particles]
-    size_t n_boundary_particles;    //[n_liquid_particles..n_boundary_particles]
-    size_t n_mobile_particles;      //[n_boundary_particles
-                                    //  + n_liquid_particles..n_mobile_particles] 
-    size_t n_total_particles;
+    unsigned int n_liquid_particles_start;
+    unsigned int n_liquid_particles;      //[0..n_liquid_particles]
+
+    unsigned int n_boundary_particels_start;
+    unsigned int n_boundary_particles;    //[n_liquid_particles..n_boundary_particles]
+
+    unsigned int n_modile_particles_start;
+    unsigned int n_mobile_particles;      //[n_boundary_particles
+                                      //  + n_liquid_particles..n_mobile_particles]
+    unsigned int n_total_particles;
 
     //Position
     float *x;
