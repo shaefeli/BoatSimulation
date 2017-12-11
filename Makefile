@@ -204,6 +204,33 @@ OpenGL_Renderer.cpp.s:
 	$(MAKE) -f CMakeFiles/PBS_project.dir/build.make CMakeFiles/PBS_project.dir/OpenGL_Renderer.cpp.s
 .PHONY : OpenGL_Renderer.cpp.s
 
+PCI_SPH.o: PCI_SPH.cpp.o
+
+.PHONY : PCI_SPH.o
+
+# target to build an object file
+PCI_SPH.cpp.o:
+	$(MAKE) -f CMakeFiles/PBS_project.dir/build.make CMakeFiles/PBS_project.dir/PCI_SPH.cpp.o
+.PHONY : PCI_SPH.cpp.o
+
+PCI_SPH.i: PCI_SPH.cpp.i
+
+.PHONY : PCI_SPH.i
+
+# target to preprocess a source file
+PCI_SPH.cpp.i:
+	$(MAKE) -f CMakeFiles/PBS_project.dir/build.make CMakeFiles/PBS_project.dir/PCI_SPH.cpp.i
+.PHONY : PCI_SPH.cpp.i
+
+PCI_SPH.s: PCI_SPH.cpp.s
+
+.PHONY : PCI_SPH.s
+
+# target to generate assembly for a file
+PCI_SPH.cpp.s:
+	$(MAKE) -f CMakeFiles/PBS_project.dir/build.make CMakeFiles/PBS_project.dir/PCI_SPH.cpp.s
+.PHONY : PCI_SPH.cpp.s
+
 Particle_Generator.o: Particle_Generator.cpp.o
 
 .PHONY : Particle_Generator.o
@@ -330,6 +357,9 @@ help:
 	@echo "... OpenGL_Renderer.o"
 	@echo "... OpenGL_Renderer.i"
 	@echo "... OpenGL_Renderer.s"
+	@echo "... PCI_SPH.o"
+	@echo "... PCI_SPH.i"
+	@echo "... PCI_SPH.s"
 	@echo "... Particle_Generator.o"
 	@echo "... Particle_Generator.i"
 	@echo "... Particle_Generator.s"

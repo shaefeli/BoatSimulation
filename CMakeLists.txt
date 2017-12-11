@@ -70,7 +70,7 @@ set( projFiles
 		"Maya_Interface.h"
         Particle_Generator.cpp
         Particle_Generator.h
-		)
+        PCI_SPH.cpp PCI_SPH.h SupportingStructures.h)
 
 
 file( COPY "fragment_shader.fs"

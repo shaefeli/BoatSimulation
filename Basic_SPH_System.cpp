@@ -7,18 +7,7 @@
 #include "Particle_Generator.h"
 
 
-template <typename T, std::size_t N>
-class Vec
-{
-public:
-    typedef T value_type;
-    static const std::size_t size = N;
-    Vec() {}
-    T& operator[](std::size_t i) { return _data[i]; }
-    const T& operator[](std::size_t i) const { return _data[i]; }
-private:
-    T _data[N];
-};
+
 
 Basic_SPH_System::Basic_SPH_System(
                                     float b_min_x,//Boundary values
@@ -89,7 +78,7 @@ void Basic_SPH_System::finilizeInit() {
 
     particles.n_boundary_particles = 2*(b_samples_xy.size() + b_samples_xz.size() + b_samples_yz.size() );
 #endif
-    particles.n_boundary_particels_start = particles.n_liquid_particles_start + particles.n_liquid_particles;
+    particles.n_boundary_particles_start = particles.n_liquid_particles_start + particles.n_liquid_particles;
     particles.n_boundary_particles = 0;
 
 
@@ -104,7 +93,7 @@ void Basic_SPH_System::finilizeInit() {
 //    load_model_data(0.05, x_mob, y_mob, z_mob, n_mobile_particles);
 
     int mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
-    particles.n_modile_particles_start = particles.n_boundary_particels_start + particles.n_boundary_particles;
+    particles.n_mobile_particles_start = particles.n_boundary_particles_start + particles.n_boundary_particles;
     particles.n_mobile_particles = n_mobile_particles;
 
 
@@ -152,63 +141,63 @@ void Basic_SPH_System::finilizeInit() {
     //Initialize the boundary particles
     size_t offset = 0;
     for( size_t i = 0; i < b_samples_xy.size(); i++ ) { //XY plane faces
-        particles.x[particles.n_boundary_particels_start                + i] = b_samples_xy[i][0];
-        particles.y[particles.n_boundary_particels_start                + i] = b_samples_xy[i][1];
-        particles.z[particles.n_boundary_particels_start                + i] = b_min_z;
+        particles.x[particles.n_boundary_particles_start                + i] = b_samples_xy[i][0];
+        particles.y[particles.n_boundary_particles_start                + i] = b_samples_xy[i][1];
+        particles.z[particles.n_boundary_particles_start                + i] = b_min_z;
         
-        particles.vx[particles.n_boundary_particels_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vy[particles.n_boundary_particels_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vz[particles.n_boundary_particels_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
 
-        particles.x[particles.n_boundary_particels_start  + b_samples_xy.size() + i] = b_samples_xy[i][0];
-        particles.y[particles.n_boundary_particels_start  + b_samples_xy.size() + i] = b_samples_xy[i][1];
-        particles.z[particles.n_boundary_particels_start  + b_samples_xy.size() + i] = b_max_z;
+        particles.x[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_samples_xy[i][0];
+        particles.y[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_samples_xy[i][1];
+        particles.z[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_max_z;
         
-        particles.vx[particles.n_boundary_particels_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vy[particles.n_boundary_particels_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vz[particles.n_boundary_particels_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
     }
     offset += 2*b_samples_xy.size();
 
     for( size_t i = 0; i < b_samples_xz.size(); i++ ) { //XY plane faces
-        particles.x[particles.n_boundary_particels_start                        + offset + i] = b_samples_xz[i][0];
-        particles.y[particles.n_boundary_particels_start                        + offset + i] = b_min_y;
-        particles.z[particles.n_boundary_particels_start                        + offset + i] = b_samples_xz[i][1];
+        particles.x[particles.n_boundary_particles_start                        + offset + i] = b_samples_xz[i][0];
+        particles.y[particles.n_boundary_particles_start                        + offset + i] = b_min_y;
+        particles.z[particles.n_boundary_particles_start                        + offset + i] = b_samples_xz[i][1];
         
-        particles.vx[particles.n_boundary_particels_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vy[particles.n_boundary_particels_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vz[particles.n_boundary_particels_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
 
-        particles.x[particles.n_boundary_particels_start  + b_samples_xz.size() + offset + i] = b_samples_xy[i][0];
-        particles.y[particles.n_boundary_particels_start  + b_samples_xz.size() + offset + i] = b_max_y;
-        particles.z[particles.n_boundary_particels_start  + b_samples_xz.size() + offset + i] = b_samples_xy[i][1];;
+        particles.x[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_samples_xy[i][0];
+        particles.y[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_max_y;
+        particles.z[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_samples_xy[i][1];;
         
-        particles.vx[particles.n_boundary_particels_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vy[particles.n_boundary_particels_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vz[particles.n_boundary_particels_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
     }
     offset += 2*b_samples_xz.size();
     for( size_t i = 0; i < b_samples_yz.size(); i++ ) { //XY plane faces
-        particles.x[particles.n_boundary_particels_start                        + offset + i] = b_min_x;
-        particles.y[particles.n_boundary_particels_start                        + offset + i] = b_samples_yz[i][0];
-        particles.z[particles.n_boundary_particels_start                        + offset + i] = b_samples_yz[i][1];
+        particles.x[particles.n_boundary_particles_start                        + offset + i] = b_min_x;
+        particles.y[particles.n_boundary_particles_start                        + offset + i] = b_samples_yz[i][0];
+        particles.z[particles.n_boundary_particles_start                        + offset + i] = b_samples_yz[i][1];
         
-        particles.vx[particles.n_boundary_particels_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vy[particles.n_boundary_particels_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vz[particles.n_boundary_particels_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
 
-        particles.x[particles.n_boundary_particels_start  + b_samples_yz.size() + offset + i] = b_max_x;
-        particles.y[particles.n_boundary_particels_start  + b_samples_yz.size() + offset + i] = b_samples_yz[i][0];
-        particles.z[particles.n_boundary_particels_start  + b_samples_yz.size() + offset + i] = b_samples_yz[i][1];
+        particles.x[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_max_x;
+        particles.y[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_samples_yz[i][0];
+        particles.z[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_samples_yz[i][1];
         
-        particles.vx[particles.n_boundary_particels_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vy[particles.n_boundary_particels_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vz[particles.n_boundary_particels_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
     }
 
 
     for (int i = 0; i < particles.n_boundary_particles; i++){
-        particles.rho[particles.n_boundary_particels_start + i] = simState.rho0;
+        particles.rho[particles.n_boundary_particles_start + i] = simState.rho0;
     }
 #endif
 
@@ -217,8 +206,8 @@ void Basic_SPH_System::finilizeInit() {
     float x_offset = 0.5f;
     float y_offset = 0.2f;
     float z_offset = -0.3f;
-    for( size_t i = particles.n_modile_particles_start;
-         i < particles.n_modile_particles_start + n_mobile_particles;
+    for( size_t i = particles.n_mobile_particles_start;
+         i < particles.n_mobile_particles_start + n_mobile_particles;
          i++ )
     {
         particles.x[i] = x_mob[i] + x_offset;
@@ -234,10 +223,9 @@ void Basic_SPH_System::finilizeInit() {
     this->flag_finilized = true;
 }
 
-void Basic_SPH_System::setSimState(SimState state){s
+void Basic_SPH_System::setSimState(SimState state){
     this->simState = state;
     this->particles.mass = 0.2; //static_cast<float>(4. / 3. * M_PI * pow(state.h, 3));
-
 
     /**
      * Constants pre-calculated
