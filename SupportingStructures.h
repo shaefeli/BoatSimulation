@@ -39,6 +39,7 @@ typedef struct {
     float k;
     float mu;
     float g;
+    float mass;
 } SimState;
 
 typedef struct {

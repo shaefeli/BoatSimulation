@@ -6,6 +6,8 @@
 #include "unistd.h"
 #include "Particle_Generator.h"
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 #define METHOD_BASIC_SPH 0
 #define METHOD_PCI_SPH   1
@@ -23,9 +25,9 @@ int main(int argc, char** argv){
     simState.k  = 3.5;
     simState.mu = 3.5;
     simState.rho0 = 1000;
+    simState.mass = 0.2;
 
 #if METHOD_PCI_SPH
-
 
     BoundaryBox bBox{
             .x1 = 0.0f, .x2 = 1.0f,
@@ -37,7 +39,7 @@ int main(int argc, char** argv){
             .x1 = 0.25f,  .x2 = .75f,
             .y1 = 0.001f, .y2 = .5f,
             .z1 = 0.25f,  .z2 = .75f,
-            .spawningRadius = simState.h * 0.7f
+            .spawningRadius = simState.h
     };
 
     UniformGridSplit gridSplit{
@@ -53,10 +55,13 @@ int main(int argc, char** argv){
     initRendererWithSimInfo(pciSph, renderer);
     renderer.init(argc,argv);
 
+    pciSph.debugRender = &renderer;
+
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << pciSph.getCurrentTime() << "] sec\n";
-        pciSph.run_step( );
+        pciSph.run_step();
         renderer.draw();
+//        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
 

@@ -5,6 +5,7 @@
 #include "PCI_SPH.h"
 #include <thinks/poissonDiskSampling.hpp>
 #include "SupportingStructures.h"
+#include <algorithm>    // std::max
 
 PCI_SPH::PCI_SPH(
         BoundaryBox                 bBox,
@@ -13,6 +14,8 @@ PCI_SPH::PCI_SPH(
         UniformGridSplit            uGridSplit) :
         bBox(bBox), iBox(iBox), simState(simState), uGridSplit(uGridSplit)
 {
+    this->particles.mass = simState.mass;
+
     this->uniform_grid = std::make_shared<Uniform_Grid>(
             bBox.x1, bBox.y1, bBox.z1,
             bBox.x2, bBox.y2, bBox.z2,
@@ -260,16 +263,19 @@ void PCI_SPH::run_step() {
     this->calculate_Forces_StageOne();
     float m  = this->particles.mass;
 
-    float eps = 0.01;
-    float rho_err = 1;
+    float eps = 1; // error should be less then 1%
+    float rho_err = 100;
     size_t it = 0;
+    
+    
+    updateParticlesPositionAndVelocity();
 
     printf("-----------------------------------------\n");
-    while ( rho_err > eps && it < 5){
+    while ( rho_err > eps && it < 100){
         /**
          * Predict velocity and location
          */
-        updateParticlesPositionAndVelocity();
+//        updateParticlesPositionAndVelocity();
 
         /**
          * Inside we predict density, its variation and update pressure.
@@ -279,7 +285,24 @@ void PCI_SPH::run_step() {
         rho_err = this->calculate_DensityPressureCorrection();
         this->calculate_Forces_Pressure(); // this pressure is used on the next iteration!
 
-
+        float dt = simState.dt;
+        float m = particles.mass;
+        for(int i = particles.n_liquid_particles_start;
+            i < particles.n_liquid_particles;
+            i++)
+        {
+            particles.vx[i] += dt / m * ( particles.Fx_p[i]);
+            particles.vy[i] += dt / m * ( particles.Fy_p[i]);
+            particles.vz[i] += dt / m * ( particles.Fz_p[i]);
+            
+            particles.x[i]  += dt * particles.vx[i];
+            particles.y[i]  += dt * particles.vy[i];
+            particles.z[i]  += dt * particles.vz[i];
+            
+            implyBCOnParticle(i);
+        }
+        
+        this->debugRender->draw();
         printf("[%d]it ==> rho_err = %f \n", static_cast<int>(current_iteration), rho_err);
         it++;
     }
@@ -288,7 +311,7 @@ void PCI_SPH::run_step() {
     /**
      * Final velocity and location assignment
      */
-    updateParticlesPositionAndVelocity();
+//    updateParticlesPositionAndVelocity();
 
     /**
      *  Update current time and iteration number
@@ -410,7 +433,7 @@ void PCI_SPH::calculate_Forces_StageOne() {
             for (int j = 0; j < cell_size; j++){
                 // get particleID to work with
                 auto particleID = static_cast<int>(cell[j]); // in equations that's our J index
-
+                if (particleID == i ) continue;
 
                 float rhoj = this->particles.rho[particleID];
                 float mj   = this->particles.mass;
@@ -424,7 +447,7 @@ void PCI_SPH::calculate_Forces_StageOne() {
 
 
                 // Calc Force from viscosity
-                float F_visc = this->simState.mu *this->evalKernel_visc_laplacian(i,particleID,this->simState.h);
+                float F_visc = this->simState.mu * this->evalKernel_visc_laplacian(i,particleID,this->simState.h);
                 F_visc_x +=  mi * F_visc / rhoi * (this->particles.vx[particleID] - this->particles.vx[i]) / rhoj;
                 F_visc_y +=  mi * F_visc / rhoi * (this->particles.vy[particleID] - this->particles.vy[i]) / rhoj;
                 F_visc_z +=  mi * F_visc / rhoi * (this->particles.vz[particleID] - this->particles.vz[i]) / rhoj;
@@ -486,8 +509,10 @@ void PCI_SPH::calculate_Forces_StageOne() {
             // iterate over ELEMENTS IN THE CELL - so it is not Particle ID yet
             for (int j = 0; j < cell_size; j++) {
                 // get particleID to work with
+                
                 auto particleID = static_cast<int>(cell[j]); // in equations that's our J index
-
+                if (particleID == i ) continue;
+                
                 float rhoj = this->particles.rho[particleID];
                 float mj   = this->particles.mass;
                 float mi   = mj;
@@ -504,26 +529,24 @@ void PCI_SPH::calculate_Forces_StageOne() {
                 F_cur_z = -this->gamma * mi * ( this->particles.nz[i] - this->particles.nz[particleID] );
 
 
-                float Kij = 2 * this->simState.rho0 / (particles.rho[i] + particles.rho[particleID]);
+                float Kij = 2 * this->simState.rho0 / (rhoi + rhoj);
                 F_st_x += Kij * (F_coh_x + F_cur_x);
                 F_st_y += Kij * (F_coh_y + F_cur_y);
                 F_st_z += Kij * (F_coh_z + F_cur_z);
             }
         }
 
-        this->particles.Fx[i] += F_st_x;
-        this->particles.Fy[i] += F_st_y;
-        this->particles.Fz[i] += F_st_z;
+//        this->particles.Fx[i] += F_st_x;
+//        this->particles.Fy[i] += F_st_y;
+//        this->particles.Fz[i] += F_st_z;
     }
-
-
 }
 
 float PCI_SPH::calculate_DensityPressureCorrection() {
 
     std::vector<size_t> near_cells;
     float betta = pow(simState.dt,2.0f)  *  pow(particles.mass,2.0f) * 2.0f / pow(simState.rho0,2.0f);
-    double rho_error  = 0;
+    float rho_error  = 0;
 
     for(int i = this->particles.n_liquid_particles_start;
             i < this->particles.n_liquid_particles;
@@ -546,8 +569,12 @@ float PCI_SPH::calculate_DensityPressureCorrection() {
         /**
          *  Temp summs to hold Summ( grad_Wij ) and Summ( (grad_Wij)^2 )
          */
-        float s1 = 0.0f;
-        float s2 = 0.0f;
+        
+        float s1x = 0.0f;
+        float s1y = 0.0f;
+        float s1z = 0.0f;
+        
+        float s2  = 0.0f;
 
         // iterate over near cells
         for (auto cellId : near_cells) {
@@ -559,23 +586,30 @@ float PCI_SPH::calculate_DensityPressureCorrection() {
             for (int j = 0; j < cell_size; j++) {
                 // get particleID to work with
                 auto particleID = static_cast<int>(cell[j]); // in equations that's our J index
-
-                float rhoj = this->particles.rho[particleID];
-                float mj   = this->particles.mass;
-                float mi   = mj;
+                if (particleID == i ) continue;
+                
                 ijVec      = this->ij_vector(i, particleID);
                 ijVec.normalize();
-
-                s1 += this->evalKernel_poly6_gradient(i, particleID, simState.h);
-                s2 += s1*s1;
-
+                
+                //TODO: actually I think we can make it simplier!
+                float gradVal = this->evalkernel_spiky_gradient(i, particleID, simState.h);
+                s1x += gradVal * ijVec.x();
+                s1y += gradVal * ijVec.y();
+                s1z += gradVal * ijVec.z();
+                
+                s2 += gradVal * gradVal;
             }
         }
 
         float rho_star = this->particles.rho[i] - simState.rho0;
-        float p_corr   = -rho_star /( betta * (-s1 - s2));
+        float s1 = s1x*s1x + s1y*s1y + s1z*s1z;
+        float s = -s1 -s2;
+        float p_corr = 0;
+        if (s > 0.0000000001){
+            p_corr   = -rho_star /( betta * (-s1 - s2));
+        }
 
-        rho_error += rho_star*rho_star;
+        rho_error = std::max<float>(rho_star, rho_error);
         this->particles.p[i] += p_corr;
     }
 
@@ -616,7 +650,8 @@ float PCI_SPH::calculate_DensityPressureCorrection() {
             for (int j = 0; j < cell_size; j++) {
                 // get particleID to work with
                 auto particleID = static_cast<int>(cell[j]); // in equations that's our J index
-
+                if (particleID == i ) continue;
+                
                 float rhoj = this->particles.rho[particleID];
                 float pj   = this->particles.p[particleID];
                 float mj   = this->particles.mass;
@@ -624,13 +659,12 @@ float PCI_SPH::calculate_DensityPressureCorrection() {
                 ijVec      = this->ij_vector(i, particleID);
                 ijVec.normalize();
 
-
                 float gradP =  this->evalkernel_spiky_gradient(i, particleID, this->simState.h);
-                gradP *=  rhoi * mj * ( pi /(rhoi * rhoi) + pj / (rhoj * rhoj) );
+                gradP *=   mi * mj * ( pi /(rhoi * rhoi) + pj / (rhoj * rhoj) );
 
-                F_press_x += - mi/rhoi * gradP * ijVec.x();
-                F_press_y += - mi/rhoi * gradP * ijVec.y();
-                F_press_z += - mi/rhoi * gradP * ijVec.z();
+                F_press_x += - gradP * ijVec.x();
+                F_press_y += - gradP * ijVec.y();
+                F_press_z += - gradP * ijVec.z();
             }
         }
 
@@ -640,7 +674,7 @@ float PCI_SPH::calculate_DensityPressureCorrection() {
         
     }
     
-    return static_cast<float>(sqrt(rho_error));
+    return (rho_error / simState.rho0) * 100.0f;
 }
 
 void PCI_SPH::calculate_Forces_Pressure() {

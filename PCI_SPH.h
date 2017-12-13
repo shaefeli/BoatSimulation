@@ -9,6 +9,7 @@
 #include "Uniform_Grid.h"
 #include "Vector3T.h"
 #include "SupportingStructures.h"
+#include "OpenGL_Renderer.h"
 
 class PCI_SPH {
 
@@ -65,6 +66,9 @@ private:
 
 
 public:
+    //TODO: remove this sht
+    OpenGL_Renderer* debugRender;
+
     ParticlesSystemData             particles;
     std::shared_ptr<Uniform_Grid>   uniform_grid;
 
