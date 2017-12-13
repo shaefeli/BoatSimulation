@@ -71,6 +71,9 @@ int main(int argc, char** argv){
         bsph.run_step( state.dt );
         renderer.draw();
         it++;
+        //std::cout<<bsph.mobile_mass_center_x<<","<<bsph.mobile_mass_center_y<<","<<bsph.mobile_mass_center_z<<std::endl;
+        //std::cout<<bsph.mobile_scale<<std::endl;
+
     }
 
 
