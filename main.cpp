@@ -75,8 +75,7 @@ int main(int argc, char** argv){
         //std::cout<<bsph.mobile_scale<<std::endl;
 
     }
-
-
+    std::cout<<"closing"<<std::endl;
 
     return 0;
 }
