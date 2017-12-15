@@ -50,6 +50,7 @@ private:
 
 
 void load_model_data(   float h,
+                        double scale,
                         std::vector<float> &xv,
                         std::vector<float> &yv,
                         std::vector<float> &zv,
@@ -58,7 +59,8 @@ void load_model_data(   float h,
 {
 
 
-    std::string inputfile = "Models/watercraftPack_001.obj";
+    //std::string inputfile = "Models/watercraftPack_001.obj";
+    std::string inputfile = "Models/wavecraft001_ch.obj";
     std::string mtlfolder = "Models/";
     
     tinyobj::attrib_t attrib;
@@ -118,7 +120,7 @@ void load_model_data(   float h,
     miny -= avgy;
     minz -= avgz;
 
-   float scale = 0.12;
+   //float scale = 0.12;
 
 
     // Loop over shapes

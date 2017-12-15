@@ -48,9 +48,9 @@ void Basic_SPH_System::finilizeInit() {
     x_min[1] = 0.0f;
     x_min[2] = 0.0f;
 
-    x_max[0] = 0.2;
-    x_max[1] = 0.2;
-    x_max[2] = 0.2;
+    x_max[0] = 1.;
+    x_max[1] = 0.4;
+    x_max[2] = 1.;
     uint32_t max_sample_attempts = 30;
     uint32_t seed = 1981;
     std::vector<Vec<float,3>> liquid_samples = thinks::poissonDiskSampling(this->simState.h*0.7,x_min, x_max,max_sample_attempts, seed);
@@ -93,8 +93,8 @@ void Basic_SPH_System::finilizeInit() {
     size_t n_mobile_particles;
 
     //generate_particle_cube(0.1,0.25, x_mob, y_mob, z_mob, n_mobile_particles);
-    
-    load_model_data(0.05, x_mob, y_mob, z_mob, n_mobile_particles);
+    double scale = 0.12;
+    load_model_data(0.04, scale, x_mob, y_mob, z_mob, n_mobile_particles);
 
     size_t mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
     particles.n_mobile_particles = n_mobile_particles;
@@ -201,9 +201,21 @@ void Basic_SPH_System::finilizeInit() {
     }
     //Initialize the mobile particles
     //Offsets for the mobile particles position (remember that at start they are centered around zero)
+
+    //Initialize also the info for the rendering of the model
     float x_offset = 0.5f;
     float y_offset = 0.2f;
     float z_offset = -0.3f;
+    this->mobile_mass_center_x = x_offset;
+    this->mobile_mass_center_y = y_offset;
+    this->mobile_mass_center_z = z_offset;
+    this->mobile_scale = scale;
+    this->mobile_angle_phi = 0.;
+    this->mobile_angle_theta = 0.;
+    this->mobile_angle_psi = 0.;
+
+
+
     for( int i = 0; i < n_mobile_particles; i++ ) {
         particles.x[mobile_offset + i] = x_mob[i] + x_offset;
         particles.y[mobile_offset + i] = y_mob[i] + y_offset;
@@ -622,6 +634,10 @@ void Basic_SPH_System::move_solid_object( float x, float y, float z )
         particles.x[i] += x;
         particles.y[i] += y;
         particles.z[i] += z;
+
+        mobile_mass_center_x += x;
+        mobile_mass_center_y += y;
+        mobile_mass_center_z += z;
     }
 }
 

@@ -113,6 +113,15 @@ private:
     bool flag_finilized = false;
     
 public:
+    float mobile_mass_center_x;
+    float mobile_mass_center_y;
+    float mobile_mass_center_z;
+    float mobile_scale;
+    float mobile_angle_phi;
+    float mobile_angle_theta;
+    float mobile_angle_psi;
+    //To add: mobile rotations
+
     //Neighbor-search-structure
     Uniform_Grid uniform_grid;
 

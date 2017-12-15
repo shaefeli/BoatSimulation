@@ -20,6 +20,7 @@ class Boat_Model
 
 
 extern void load_model_data( float h,
+                            double scale,
                         std::vector<float> &xv,
                         std::vector<float> &yv,
                         std::vector<float> &zv,
@@ -34,7 +35,7 @@ extern void generate_particle_cube(
                             std::vector<float> &xv,
                             std::vector<float> &yv,
                             std::vector<float> &zv,
-                            size_t &n_particles 
+                            size_t &n_particles
                             );
 
 #endif
