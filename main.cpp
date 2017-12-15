@@ -8,7 +8,9 @@
 
 int main(int argc, char** argv){
 
-    
+    int endIt = 400;
+    int startIt = 301;
+
     SimState state;
     state.dt = 5e-4;
     //state.dt = 1e-5;
@@ -26,7 +28,7 @@ int main(int argc, char** argv){
     bsph.finilizeInit();
 
     OpenGL_Renderer renderer;
-    Maya_Interface maya(bsph.particles.n_liquid_particles);
+    Maya_Interface maya(bsph.particles.n_liquid_particles,endIt, startIt);
 
     //renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
     renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
@@ -62,11 +64,18 @@ int main(int argc, char** argv){
         std::cout << "[" << it * state.dt << "] sec\n";
         //std::cout<<"iteration "<<it<<std::endl;
         //usleep(10000);
-        if(render and it > 300 && it < 400){
+        if(render and it >= startIt && it <= endIt){
             maya.writeToMaya(it,bsph.particles.x,
                                 bsph.particles.y,
                                 bsph.particles.z,
                                 bsph.particles.n_liquid_particles);
+            maya.writeBoatInfos(bsph.mobile_mass_center_x,
+                                bsph.mobile_mass_center_y,
+                                bsph.mobile_mass_center_z,
+                                bsph.mobile_angle_phi,
+                                bsph.mobile_angle_theta,
+                                bsph.mobile_angle_psi,
+                                it);
         } 
         bsph.run_step( state.dt );
         renderer.draw();

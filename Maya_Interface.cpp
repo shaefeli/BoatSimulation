@@ -5,7 +5,7 @@
 #include <string.h>
 using namespace std;
 
-Maya_Interface::Maya_Interface(size_t nr_particles){
+Maya_Interface::Maya_Interface(size_t nr_particles, int maxIt, int minIt){
 	//fileStart = read file with start
 	ifstream t1("maya_utilities/typicalFileStartMaya");
 	ifstream t2("maya_utilities/typicalFileEndMaya");
@@ -29,6 +29,15 @@ Maya_Interface::Maya_Interface(size_t nr_particles){
 	}
 	idis << ";\n";
 	Maya_Interface::ids = idis.str();
+	Maya_Interface::maxIter = maxIt;
+	Maya_Interface::minIter = minIt;
+	int nrIt = maxIt-minIt+1;
+    Maya_Interface::mob_x = (float *)malloc(nrIt*sizeof(float));
+    Maya_Interface::mob_y = (float *)malloc(nrIt*sizeof(float));
+    Maya_Interface::mob_z = (float *)malloc(nrIt*sizeof(float));
+    Maya_Interface::rot_x = (float *)malloc(nrIt*sizeof(float));
+    Maya_Interface::rot_y = (float *)malloc(nrIt*sizeof(float));
+    Maya_Interface::rot_z = (float *)malloc(nrIt*sizeof(float));
 }
 void Maya_Interface::writeToMaya(size_t frameNr, float* x ,float* y, float* z, size_t nr_particles){
 
@@ -106,4 +115,97 @@ void Maya_Interface::writeToMaya(size_t frameNr, float* x ,float* y, float* z, s
   	//Write everything to file
   	mayaFile << header.str() << this->fileStart << cube.str() << particuleInfos.str() << positions.str() << this->ids << afterParticles.str() << this->fileEnd << "\n// End of frame" << frameNr << ".ma;"; 
   	mayaFile.close();
+}
+
+void Maya_Interface::writeBoatInfos(float x, float y, float z, float rx, float ry, float rz, int it)
+{
+	int currentIt = it-this->minIter;
+	//We add a position
+	if (it != this->maxIter){
+		this->mob_x[currentIt] = x;
+		this->mob_y[currentIt] = y;
+		this->mob_z[currentIt] = z;
+		this->rot_x[currentIt] = rx;
+		this->rot_y[currentIt] = ry;
+		this->rot_z[currentIt] = rz;
+	}
+	//We write all the infos into a file
+	else{
+		this->mob_x[currentIt] = x;
+		this->mob_y[currentIt] = y;
+		this->mob_z[currentIt] = z;
+		this->rot_x[currentIt] = rx;
+		this->rot_y[currentIt] = ry;
+		this->rot_z[currentIt] = rz;
+		ofstream infoFile;
+		stringstream header;
+		header << "infoFile";
+  		infoFile.open(header.str().c_str());
+  		int nrIts = this->maxIter-this->minIter+1;
+  		infoFile << "float $translate_x[] = {";
+  		for(int i=0; i<nrIts; i++){
+  			if(i != nrIts-1){
+  				infoFile << this->mob_x[i] << ", ";
+  			}	 
+  			else{
+  				infoFile << this->mob_x[i] << "};\n";
+  			}
+  		}
+  		infoFile << "float $translate_y[] = {";
+  		for(int i=0; i<nrIts; i++){
+  			if(i != nrIts-1){
+  				infoFile << this->mob_y[i] << ", ";
+  			}	 
+  			else{
+  				infoFile << this->mob_y[i] << "};\n";
+  			}
+  		}
+  		infoFile << "float $translate_z[] = {";
+  		for(int i=0; i<nrIts; i++){
+  			if(i != nrIts-1){
+  				infoFile << this->mob_z[i] << ", ";
+  			}	 
+  			else{
+  				infoFile << this->mob_z[i] << "};\n";
+  			}
+  		}
+  		infoFile << "float $rotate_x[] = {";
+  		for(int i=0; i<nrIts; i++){
+  			if(i != nrIts-1){
+  				infoFile << this->rot_x[i] << ", ";
+  			}	 
+  			else{
+  				infoFile << this->rot_x[i] << "};\n";
+  			}
+  		}
+  		infoFile << "float $rotate_y[] = {";
+  		for(int i=0; i<nrIts; i++){
+  			if(i != nrIts-1){
+  				infoFile << this->rot_y[i] << ", ";
+  			}	 
+  			else{
+  				infoFile << this->rot_y[i] << "};\n";
+  			}
+  		}
+  		infoFile << "float $rotate_z[] = {";
+  		for(int i=0; i<nrIts; i++){
+  			if(i != nrIts-1){
+  				infoFile << this->rot_z[i] << ", ";
+  			}	 
+  			else{
+  				infoFile << this->rot_z[i] << "};\n";
+  			}
+  		}
+  		infoFile.close();  		
+	}
+}
+
+Maya_Interface::~Maya_Interface(){
+	free(Maya_Interface::mob_x);
+	free(Maya_Interface::mob_y);
+	free(Maya_Interface::mob_z);
+	free(Maya_Interface::rot_x);
+	free(Maya_Interface::rot_y);
+	free(Maya_Interface::rot_z);
+
 }
