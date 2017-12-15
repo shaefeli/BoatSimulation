@@ -14,6 +14,7 @@
 #include <CGAL/convex_hull_3.h>
 
 #include <thinks/poissonDiskSampling.hpp>
+#include <random>
 
 //typedef CGAL::Simple_cartesian<double>               Kernel;
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
@@ -275,10 +276,26 @@ void load_model_data(   float h,
         
 
    }
+
+
+//    std::random_device rd;
+//    std::mt19937 gen(rd());
+//    std::uniform_real_distribution<> dis(0, 1);
+//    float dice = 0.f;s
+//   for (int i = 0; i < interior_points_x.size(); i++){
+//       dice = static_cast<float>(dis(gen));
+//       if (dice < 0.1f){
+//           xv.push_back(interior_points_x[i]);
+//           yv.push_back(interior_points_y[i]);
+//           zv.push_back(interior_points_z[i]);
+//       }
+//   }
+
    xv = interior_points_x;
    yv = interior_points_y;
    zv = interior_points_z;
    n_particles = n_interior_points;
+//   n_particles = xv.size();
    std::cout<<std::endl;
 
 

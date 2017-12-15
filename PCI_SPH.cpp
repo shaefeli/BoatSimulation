@@ -27,7 +27,8 @@ PCI_SPH::PCI_SPH(
      *  Sampling for liquid initial positions
      */
 
-    vector<Vec<float,3>> liquid_samples = p_createCubicLiquid();
+    //TODO: LOOK HERE
+    vector<Vec<float,3>> liquid_samples =  p_createCubicLiquid();
 //    vector<Vec<float,3>> liquid_samples = p_createSamplingLiquid();
 //    vector<Vec<float,3>> liquid_samples;
 //    Vec<float,3> p1,p2,p3;
@@ -55,11 +56,12 @@ PCI_SPH::PCI_SPH(
     std::vector<float> z_mob;
     size_t n_mobile_particles = 0;
 
-    double scale = 0.1;
-    load_model_data(0.02, scale, x_mob, y_mob, z_mob, n_mobile_particles);
+//    double scale = 0.1;
+//    load_model_data(0.01, scale, x_mob, y_mob, z_mob, n_mobile_particles);
+    this->generate_particle_cube(.2f, 0.02, x_mob, y_mob,z_mob,n_mobile_particles);
     int mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
     this->particles.n_mobile_particles_start = particles.n_boundary_particles_start + particles.n_boundary_particles;
-    this->particles.n_mobile_particles = static_cast<unsigned int>(n_mobile_particles);
+    this->particles.n_mobile_particles = n_mobile_particles;
 
     /**
      *  Total number of particles now is known - we can allocate and fill all particles info
@@ -93,20 +95,32 @@ PCI_SPH::PCI_SPH(
     /**
      *  Initialize the BOAT particles
      */
-    float x_offset = 0.25f;
-    float y_offset = 0.1f;
-    float z_offset = -2.f;
+    float x_offset = .2f;
+    float y_offset = 0.2f;
+    float z_offset = 1.f;
     for( size_t i = particles.n_mobile_particles_start;
-         i < particles.n_mobile_particles_start + particles.n_mobile_particles;
-         i++ )
+                i < particles.n_mobile_particles_start + particles.n_mobile_particles;
+                i++ )
     {
         particles.x[i] = x_mob[i] + x_offset;
         particles.y[i] = y_mob[i] + y_offset;
         particles.z[i] = z_mob[i] + z_offset;
 
+        particles.x_star[i] = x_mob[i] + x_offset;
+        particles.y_star[i] = y_mob[i] + y_offset;
+        particles.z_star[i] = z_mob[i] + z_offset;
+
         particles.vx[i] = 0.f;
         particles.vy[i] = 0.f;
         particles.vz[i] = 0.f;
+
+        particles.vx_star[i] = 0.f;
+        particles.vy_star[i] = 0.f;
+        particles.vz_star[i] = 0.f;
+
+        particles.p[i] = 0.f;
+        particles.p[i] = 0.f;
+        particles.p[i] = 0.f;
 
         particles.rho[i] = simState.rho0;
     }
@@ -995,11 +1009,103 @@ vector<Vec<float, 3>> PCI_SPH::p_createCubicLiquid() const {
     for (           float x = iBox.x1; x <= iBox.x2; x += p_offset){
         for (       float y = iBox.y1; y <= iBox.y2; y += p_offset){
             for (   float z = iBox.z1; z <= iBox.z2; z += p_offset){
-                res.push_back(Vec<float,3>(x,y,z));
+                res.emplace_back(x,y,z);
             }
         }
     }
     return res;
+}
+
+
+
+void PCI_SPH::generate_particle_cube(
+        float length,  //Length of cube side
+        float h,        //Distance between particles
+        std::vector<float> &xv,
+        std::vector<float> &yv,
+        std::vector<float> &zv,
+        size_t &n_particles
+) const
+{
+    float xmin = -length;
+    float ymin = -length;
+    float zmin = -length;
+    float xmax =  length;
+    float ymax =  length;
+    float zmax =  length;
+
+    size_t x_particles = ceil((xmax-xmin)/h);
+    size_t y_particles = ceil((ymax-ymin)/h);
+    size_t z_particles = ceil((zmax-zmin)/h);
+    xv = std::vector<float>(x_particles*y_particles);
+    yv = std::vector<float>(x_particles*y_particles);
+    zv = std::vector<float>(x_particles*y_particles);
+    int num_p = 0;
+    
+    for (size_t i = 0; i < x_particles; i++)
+        for (size_t j = 0; j < y_particles; j++){
+            float xval =i*h+xmin;
+            float yval =j*h+ymin;
+            xv[i*y_particles + j] = xval;
+            yv[i*y_particles + j] = yval;
+            zv[i*y_particles + j] = zmin;
+
+
+//            xv[x_particles*y_particles + i*x_particles + j] = i*h+xmin;
+//            yv[x_particles*y_particles + i*x_particles + j] = j*h+ymin;
+//            zv[x_particles*y_particles + i*x_particles + j] = zmax;
+//
+//            num_p++;
+            num_p++;
+        }
+
+    int start_2 = num_p;
+
+//    for (size_t k = 0; k < z_particles; k++)
+//        for (size_t j = 1; j < y_particles - 1; j++){
+//            xv[start_2 + k*z_particles + j] = xmin;
+//            yv[start_2 + k*z_particles + j] = j*h+ymin;
+//            zv[start_2 + k*z_particles + j] = k*h+zmin;
+//
+//
+//            xv[start_2 + z_particles*y_particles + k*z_particles + j] = xmax;
+//            yv[start_2 + z_particles*y_particles + k*z_particles + j] = j*h+ymin;
+//            zv[start_2 + z_particles*y_particles + k*z_particles + j] = k*h+zmin;
+//
+//            num_p++;
+//            num_p++;
+//        }
+//
+//    int start_3 = num_p;
+//
+//    for (size_t k = 1; k < z_particles - 1; k++)
+//        for (size_t i = 1; i < x_particles - 1; i++){
+//            xv[start_3 + k*z_particles + i] = i*h+xmin;
+//            yv[start_3 + k*z_particles + i] = ymin;
+//            zv[start_3 + k*z_particles + i] = k*h+zmin;
+//
+//
+//            xv[start_3 + z_particles*x_particles + k*z_particles + i] = i*h+xmin;
+//            yv[start_3 + z_particles*x_particles + k*z_particles + i] = ymax;
+//            zv[start_3 + z_particles*x_particles + k*z_particles + i] = k*h+zmin;
+//
+//            num_p++;
+//            num_p++;
+//        }
+    
+//    for( size_t i = 0; i < x_particles; i++ ) {
+//        for( size_t j = 0; j < y_particles; j++ ) {
+//            for( size_t k = 0; k < z_particles; k++ ) {
+//                if (i == 0 || i == x_particles-1 || j == 0 || j == y_particles-1 || k == 0 || k == z_particles-1){
+//                    xv[i*y_particles*z_particles + j*z_particles + k] = i*h+xmin;
+//                    yv[i*y_particles*z_particles + j*z_particles + k] = j*h+ymin;
+//                    zv[i*y_particles*z_particles + j*z_particles + k] = k*h+zmin;
+//                    num_p++;
+//                }
+//            }
+//        }
+//    }
+    n_particles = static_cast<size_t>(num_p);
 }
 
 

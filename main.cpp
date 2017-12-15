@@ -35,7 +35,7 @@ int main(int argc, char** argv){
 #if METHOD_PCI_SPH
 
     BoundaryBox bBox{
-            .x1 = 0.f,  .x2 = .25f,
+            .x1 = 0.f,  .x2 = 0.25f,
             .y1 = 0.f,  .y2 = 1.0f,
             .z1 = 0.f,  .z2 = 1.f
     };
@@ -56,14 +56,15 @@ int main(int argc, char** argv){
     PCI_SPH pciSph(bBox,iBox,simState,gridSplit);
 
 
-    OpenGL_Renderer renderer;
-    initRendererWithSimInfo(pciSph, renderer);
-    renderer.init(argc,argv);
 
-    pciSph.debugRender = &renderer;
     pciSph.precalculateDeltaValue();
 
 
+    OpenGL_Renderer renderer;
+    initRendererWithSimInfo(pciSph, renderer);
+    renderer.init(argc,argv);
+    pciSph.debugRender = &renderer;
+//    renderer.draw();
 
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << pciSph.getCurrentTime() << "] sec\n";

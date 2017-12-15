@@ -17,6 +17,14 @@ private:
 
     vector<Vec<float, 3>> p_createSamplingLiquid() const;
     vector<Vec<float, 3>> p_createCubicLiquid() const;
+    void generate_particle_cube(
+            float length,  //Length of cube side
+            float h,        //Distance between particles
+            std::vector<float> &xv,
+            std::vector<float> &yv,
+            std::vector<float> &zv,
+            size_t &n_particles
+    ) const;
 
     void p_initializeBoundary();
     void implyBCOnParticle(int i);
