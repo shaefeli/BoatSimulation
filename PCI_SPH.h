@@ -16,6 +16,8 @@ class PCI_SPH {
 private:
 
     vector<Vec<float, 3>> p_createSamplingLiquid() const;
+    vector<Vec<float, 3>> p_createCubicLiquid() const;
+
     void p_initializeBoundary();
     void implyBCOnParticle(int i);
 
@@ -41,7 +43,8 @@ private:
     float evalC_spline(int &i, int &j, float &h);
 
     // distance between particles
-    Vector3T<float> ij_vector(int i,int j);
+    Vector3T<float> ij_vectorLocation(int i, int j);
+    Vector3T<float> ij_vectorVelocity(int i, int j);
     float distanceIJ(int i, int j);
 
     float h9,h6, h3, h2;
@@ -54,6 +57,15 @@ private:
     float h6_64;
 
     float gamma = 0.5; // Surface tension coefficient
+    /**
+     * // Delta from PCI SPH paper
+     *              -1
+     * = ----------------------------------
+     *   betta * (-summ(grad)*summ(grad) - summ(grad * grad) )
+     *
+     *  where grad = gradient of the spiky kernel
+     */
+    float DELTA = 0.0f;
 
     float  current_time = 0.0f;
     size_t current_iteration = 0;
@@ -68,6 +80,8 @@ private:
 public:
     //TODO: remove this sht
     OpenGL_Renderer* debugRender;
+    void debugDeltaValue();
+    void precalculateDeltaValue();
 
     ParticlesSystemData             particles;
     std::shared_ptr<Uniform_Grid>   uniform_grid;

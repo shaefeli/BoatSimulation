@@ -18,34 +18,37 @@ int main(int argc, char** argv){
 
     
     SimState simState;
-    simState.dt = 5e-4;
-    //simState.dt = 1e-5;
+//    simState.dt = 0.001;
+    simState.dt = 1e-3;
     simState.g  = 9.8;
-    simState.h  = 0.0625;
-    simState.k  = 3.5;
-    simState.mu = 3.5;
-    simState.rho0 = 1000;
-    simState.mass = 0.2;
+    simState.particle_radius = 0.01f ;
+    simState.kernel_radius   = 4.0f * simState.particle_radius;
+    simState.k  = 3.5f;
+    simState.mu = 0.01f;
+    simState.rho0 = 1000.f;
+    simState.gamma = 0.f;
+    simState.mass = simState.rho0 / pow( 1.f / (simState.particle_radius*2.f),3.f);
+//    simState.mass = 10.f;
 
 #if METHOD_PCI_SPH
 
     BoundaryBox bBox{
-            .x1 = 0.0f, .x2 = 1.0f,
-            .y1 = 0.0f, .y2 = 1.0f,
-            .z1 = 0.0f, .z2 = 1.0f
+            .x1 = 0.f,  .x2 = 0.4f,
+            .y1 = 0.f,  .y2 = 1.0f,
+            .z1 = 0.f,  .z2 = 0.4f
     };
 
     ParticlesInitialSpawningBox iBox{
-            .x1 = 0.25f,  .x2 = .75f,
-            .y1 = 0.001f, .y2 = .5f,
-            .z1 = 0.25f,  .z2 = .75f,
-            .spawningRadius = simState.h
+            .x1 = 0.f,     .x2 = 0.4f,
+            .y1 = 0.001f,  .y2 = 1.0f,
+            .z1 = 0.f,     .z2 = 0.4f,
+            .spawningRadius = simState.kernel_radius
     };
 
     UniformGridSplit gridSplit{
-            .cells_x = simState.h,
-            .cells_y = simState.h,
-            .cells_z = simState.h
+            .cells_x = simState.kernel_radius,
+            .cells_y = simState.kernel_radius,
+            .cells_z = simState.kernel_radius
     };
 
     PCI_SPH pciSph(bBox,iBox,simState,gridSplit);
@@ -56,6 +59,8 @@ int main(int argc, char** argv){
     renderer.init(argc,argv);
 
     pciSph.debugRender = &renderer;
+    pciSph.precalculateDeltaValue();
+
 
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << pciSph.getCurrentTime() << "] sec\n";
@@ -72,7 +77,7 @@ int main(int argc, char** argv){
     Basic_SPH_System bsph(
                           0., 0., 0.,
                           1., 1., 1.,
-                          simState.h , simState.h , simState.h );
+                          simState.kernel_radius , simState.kernel_radius , simState.kernel_radius );
     bsph.setSimState(simState);
     bsph.finilizeInit();
 

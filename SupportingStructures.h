@@ -34,12 +34,14 @@ typedef struct{
 
 typedef struct {
     float dt;
-    float h;
+    float kernel_radius;
+    float particle_radius;
     float rho0;
     float k;
     float mu;
     float g;
     float mass;
+    float gamma; // surface tension
 } SimState;
 
 typedef struct {
