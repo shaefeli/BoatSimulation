@@ -19,36 +19,38 @@ int main(int argc, char** argv){
     
     SimState simState;
 //    simState.dt = 0.001;
-    simState.dt = 1e-3;
+
     simState.g  = 9.8;
     simState.particle_radius = 0.01f ;
     simState.kernel_radius   = 4.0f * simState.particle_radius;
-    simState.k  = 3.5f;
-    simState.mu = 0.01f;
+    simState.k  = 1e+5;
+    simState.mu = 1e-6f;
     simState.rho0 = 1000.f;
     simState.gamma = 0.f;
     simState.mass = simState.rho0 / pow( 1.f / (simState.particle_radius*2.f),3.f);
+//    simState.mass = 1;
+    simState.dt = 0.001;
 //    simState.mass = 10.f;
 
 #if METHOD_PCI_SPH
 
     BoundaryBox bBox{
-            .x1 = 0.f,  .x2 = 0.4f,
+            .x1 = 0.f,  .x2 = .25f,
             .y1 = 0.f,  .y2 = 1.0f,
-            .z1 = 0.f,  .z2 = 0.4f
+            .z1 = 0.f,  .z2 = .5f
     };
 
     ParticlesInitialSpawningBox iBox{
-            .x1 = 0.f,     .x2 = 0.4f,
-            .y1 = 0.001f,  .y2 = 1.0f,
-            .z1 = 0.f,     .z2 = 0.4f,
-            .spawningRadius = simState.kernel_radius
+            .x1 = 0.0f,     .x2 = 0.24f,
+            .y1 = 0.05f,     .y2 = 0.3f,
+            .z1 = 0.0f,     .z2 = 0.24f,
+            .spawningRadius = simState.kernel_radius * 0.5f
     };
 
     UniformGridSplit gridSplit{
-            .cells_x = simState.kernel_radius,
-            .cells_y = simState.kernel_radius,
-            .cells_z = simState.kernel_radius
+            .cells_x = simState.kernel_radius*1.0f,
+            .cells_y = simState.kernel_radius*1.0f,
+            .cells_z = simState.kernel_radius*1.0f
     };
 
     PCI_SPH pciSph(bBox,iBox,simState,gridSplit);
@@ -60,6 +62,7 @@ int main(int argc, char** argv){
 
     pciSph.debugRender = &renderer;
     pciSph.precalculateDeltaValue();
+
 
 
     while(!glfwWindowShouldClose(renderer.getWindow())){

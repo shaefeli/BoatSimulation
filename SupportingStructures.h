@@ -12,6 +12,7 @@ public:
     typedef T value_type;
     static const std::size_t size = N;
     Vec() {}
+    Vec(T x, T y, T z){ _data[0] = x; _data[1] = y; _data[2] = z; }
     T& operator[](std::size_t i) { return _data[i]; }
     const T& operator[](std::size_t i) const { return _data[i]; }
 private:
@@ -65,7 +66,7 @@ typedef struct ParticlesAllInfoStorage{                    //particles of this t
     float *y;
     float *z;
 
-    //Position
+    // Intermediate Position
     float *x_star;
     float *y_star;
     float *z_star;
@@ -75,7 +76,7 @@ typedef struct ParticlesAllInfoStorage{                    //particles of this t
     float *vy;
     float *vz;
 
-    //Velocity
+    // Intermediate Velocity
     float *vx_star;
     float *vy_star;
     float *vz_star;
@@ -96,6 +97,7 @@ typedef struct ParticlesAllInfoStorage{                    //particles of this t
 
     // densities
     float *rho;
+    float *rho_star;
 
     // pressures
     float *p;
@@ -130,12 +132,12 @@ typedef struct ParticlesAllInfoStorage{                    //particles of this t
         Fz_p = new float[N];
 
 
-
         nx = new float[N];
         ny = new float[N];
         nz = new float[N];
 
         rho = new float[N];
+        rho_star = new float[N];
         p   = new float[N];
     }
 
@@ -151,6 +153,7 @@ typedef struct ParticlesAllInfoStorage{                    //particles of this t
 
         delete [] nx;   delete [] ny;   delete [] nz;
         delete [] rho;
+        delete [] rho_star;
         delete []p;
     }
 

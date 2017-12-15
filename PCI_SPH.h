@@ -48,11 +48,11 @@ private:
     float distanceIJ(int i, int j);
 
     float h9,h6, h3, h2;
-    float h9_315; // constants for kernels
-    float h6_15;
-    float h6_15_grad;
+    float factor_poly6; // constants for kernels
+    float factor_spiky;
+    float factor_spiky_grad;
     float h3_15;
-    float h3_15_visc;
+    float factor_visc_lapl;
     float h9_32pi;
     float h6_64;
 
