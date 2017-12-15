@@ -1,0 +1,1 @@
+for %%f IN (*.ma) DO "C:\Program Files\Autodesk\Maya2017\bin\Render.exe" -r sw -im output"%%f" -of png -rd "C:\Users\Simon\Desktop\download\renderedPart" "C:\Users\Simon\Desktop\download\processedPart\%%f"

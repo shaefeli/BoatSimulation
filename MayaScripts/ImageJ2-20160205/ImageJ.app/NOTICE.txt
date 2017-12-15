@@ -1,0 +1,126 @@
+ImageJ depends on several other software packages, each with its own license.
+
+You can generate an up-to-date list of dependencies from the source code:
+
+  cd app
+  mvn dependency:list
+
+Or to display them as a tree:
+
+  cd app
+  mvn dependency:tree
+
+As of this writing, the full list is as follows:
+
+===============================================================================
+Beanshell - http://www.beanshell.org/
+
+License: Sun Public License or LGPL 3+
+
+Artifact: org.beanshell:bsh:2.0b4
+
+===============================================================================
+EventBus - http://eventbus.org/
+
+License: Apache 2.0
+
+Artifact: org.bushe:eventbus:1.4
+
+===============================================================================
+ImgLib2 - http://imglib2.net/
+
+License: 2-clause BSD
+
+Artifacts:
+net.imglib2:imglib2:2.0.0-SNAPSHOT
+net.imglib2:imglib2-algorithms:2.0.0-SNAPSHOT
+net.imglib2:imglib2-io:2.0.0-SNAPSHOT
+net.imglib2:imglib2-ops:2.0.0-SNAPSHOT
+
+Dependencies:
+loci:loci-legacy:4.5-SNAPSHOT
+loci:ome-xml:4.5-SNAPSHOT
+loci:scifio-devel:4.5-SNAPSHOT
+loci:scifio:4.5-SNAPSHOT
+
+===============================================================================
+Javassist - http://www.javassist.org/
+
+License: MPL 1.1 or LGPL 2.1
+
+Artifact: javassist:javassist:3.9.0.GA
+
+===============================================================================
+JFreeChart - http://www.jfree.org/jfreechart/
+
+License: LGPL
+
+Artifact: org.jfree:jfreechart:1.0.14
+
+Dependencies:
+bouncycastle:bcmail-jdk14:138
+bouncycastle:bcprov-jdk14:138
+com.lowagie:itext:2.1.5
+org.jfree:jcommon:1.0.17
+
+===============================================================================
+JHotDraw7 - http://www.randelshofer.ch/oop/jhotdraw/index.html
+
+License: LGPL or CC BY 1.5
+
+Artifact: org.jhotdraw:jhotdraw:7.6.0
+
+===============================================================================
+JSch - http://www.jcraft.com/jsch/
+
+License: 3-clause BSD
+
+Artifact: com.jcraft:jsch:0.1.42
+
+===============================================================================
+MigLayout - http://www.miglayout.com/
+
+License: 3-clause BSD or GPL
+
+Artifact: com.miglayout:miglayout:swing:3.7.3.1
+
+===============================================================================
+Object Inspector - https://github.com/sbridges/object-inspector
+
+License: 2-clause BSD
+
+Artifact: com.github.sbridges.object-inspector:object-inspector:0.1
+
+===============================================================================
+RSyntaxTextArea - http://fifesoft.com/rsyntaxtextarea/
+
+License: 3-clause BSD
+
+Artifact: com.fifesoft:rsyntaxtextarea:2.0.4.1
+
+===============================================================================
+SCIFIO - http://loci.wisc.edu/software/scifio
+
+License: 2-clause BSD
+
+Artifacts:
+loci:loci-legacy:4.5-SNAPSHOT
+loci:ome-xml:4.5-SNAPSHOT
+loci:scifio-devel:4.5-SNAPSHOT
+loci:scifio:4.5-SNAPSHOT
+
+Dependencies:
+loci:jai_imageio:4.5-SNAPSHOT
+loci:lwf-stubs:4.5-SNAPSHOT
+log4j:log4j:1.2.14
+org.slf4j:slf4j-api:1.5.10
+org.slf4j:slf4j-log4j12:1.5.10
+xalan:serializer:2.7.1
+xalan:xalan:2.7.1
+
+===============================================================================
+SezPoz - http://sezpoz.java.net/
+
+License: CDDL 1.0 or GPL 2.0
+
+Artifact: net.java.sezpoz:sezpoz:1.9
