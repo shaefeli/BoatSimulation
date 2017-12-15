@@ -55,7 +55,8 @@ PCI_SPH::PCI_SPH(
     std::vector<float> z_mob;
     size_t n_mobile_particles = 0;
 
-    load_model_data(0.05, x_mob, y_mob, z_mob, n_mobile_particles);
+    double scale = 0.1;
+    load_model_data(0.01, scale, x_mob, y_mob, z_mob, n_mobile_particles);
     int mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
     this->particles.n_mobile_particles_start = particles.n_boundary_particles_start + particles.n_boundary_particles;
     this->particles.n_mobile_particles = static_cast<unsigned int>(n_mobile_particles);
@@ -92,11 +93,11 @@ PCI_SPH::PCI_SPH(
     /**
      *  Initialize the BOAT particles
      */
-    float x_offset = 0.5f;
-    float y_offset = 0.2f;
-    float z_offset = -0.3f;
+    float x_offset = 0.25f;
+    float y_offset = 0.1f;
+    float z_offset = -2.f;
     for( size_t i = particles.n_mobile_particles_start;
-         i < particles.n_mobile_particles_start + n_mobile_particles;
+         i < particles.n_mobile_particles_start + particles.n_mobile_particles;
          i++ )
     {
         particles.x[i] = x_mob[i] + x_offset;
@@ -107,7 +108,7 @@ PCI_SPH::PCI_SPH(
         particles.vy[i] = 0.f;
         particles.vz[i] = 0.f;
 
-        particles.rho[i] = simState.rho0 * 2;
+        particles.rho[i] = simState.rho0;
     }
 
     /**

@@ -137,8 +137,6 @@ int main(int argc, char** argv){
     }
 #endif
 
-    }
-    std::cout<<"closing"<<std::endl;
 
     return 0;
 }
