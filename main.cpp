@@ -26,7 +26,7 @@ int main(int argc, char** argv){
     bsph.finilizeInit();
 
     OpenGL_Renderer renderer;
-    Maya_Interface maya(5000);
+    Maya_Interface maya(bsph.particles.n_liquid_particles);
 
     //renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
     renderer.render_info.n_liquid_particles = bsph.particles.n_liquid_particles;
@@ -54,7 +54,7 @@ int main(int argc, char** argv){
 
     renderer.init(argc,argv);
     unsigned int it=0;
-    bool render = false;
+    bool render = true;
 
     //load_model_data( 0.15 );
 
