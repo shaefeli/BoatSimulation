@@ -664,7 +664,7 @@ void OpenGL_Renderer::draw_element( float x, float y, float z )
                    );
 	//Model      = glm::mat4(1.0f);
     
-    glm::mat4 Rotation       = glm::mat4(0.007f);
+    glm::mat4 Rotation       = glm::mat4(0.01f);
     Rotation[3][3] = 1.;
     
 

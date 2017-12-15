@@ -21,7 +21,7 @@ int main(int argc, char** argv){
 //    simState.dt = 0.001;
 
     simState.g  = 9.8;
-    simState.particle_radius = 0.01f ;
+    simState.particle_radius = 0.02f ;
     simState.kernel_radius   = 4.0f * simState.particle_radius;
     simState.k  = 1e+5;
     simState.mu = 1e-6f;
@@ -37,12 +37,12 @@ int main(int argc, char** argv){
     BoundaryBox bBox{
             .x1 = 0.f,  .x2 = .25f,
             .y1 = 0.f,  .y2 = 1.0f,
-            .z1 = 0.f,  .z2 = .5f
+            .z1 = 0.f,  .z2 = 1.f
     };
 
     ParticlesInitialSpawningBox iBox{
             .x1 = 0.0f,     .x2 = 0.24f,
-            .y1 = 0.05f,     .y2 = 0.3f,
+            .y1 = 0.05f,    .y2 = 0.8f,
             .z1 = 0.0f,     .z2 = 0.24f,
             .spawningRadius = simState.kernel_radius * 0.5f
     };

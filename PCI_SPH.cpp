@@ -5,6 +5,7 @@
 #include "PCI_SPH.h"
 #include <thinks/poissonDiskSampling.hpp>
 #include "SupportingStructures.h"
+#include "Particle_Generator.h"
 #include <algorithm>    // std::max
 
 PCI_SPH::PCI_SPH(
@@ -52,11 +53,12 @@ PCI_SPH::PCI_SPH(
     std::vector<float> x_mob;
     std::vector<float> y_mob;
     std::vector<float> z_mob;
-    unsigned int n_mobile_particles = 0;
-//    load_model_data(0.05, x_mob, y_mob, z_mob, n_mobile_particles);
+    size_t n_mobile_particles = 0;
+
+    load_model_data(0.05, x_mob, y_mob, z_mob, n_mobile_particles);
     int mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
     this->particles.n_mobile_particles_start = particles.n_boundary_particles_start + particles.n_boundary_particles;
-    this->particles.n_mobile_particles = n_mobile_particles;
+    this->particles.n_mobile_particles = static_cast<unsigned int>(n_mobile_particles);
 
     /**
      *  Total number of particles now is known - we can allocate and fill all particles info
@@ -384,7 +386,7 @@ void PCI_SPH::run_step() {
     float rho_err = 10.f;
     float max_rho = 0.f;
     int   corr_it = 0;
-    while (rho_err > 0.01 && corr_it < 20) {
+    while (rho_err > 0.01 && corr_it < 10) {
         corr_it++;
         // Compute rho_star and P
         for(int i = particles.n_liquid_particles_start; i < this->particles.n_liquid_particles; i++){
