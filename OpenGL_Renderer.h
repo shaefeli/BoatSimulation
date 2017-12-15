@@ -1,5 +1,9 @@
 #ifndef _PBS_OPENGL_RENDERER_
 #define _PBS_OPENGL_RENDERER_
+
+#include <stddef.h>
+#include <stdint.h>
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>

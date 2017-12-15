@@ -1,57 +1,12 @@
-#include <cstddef>
 
-#include "Uniform_Grid.h"
-#include "Vector3T.h"
 
 #ifndef _PBS_BASIC_SPH_SYSTEM_
 #define _PBS_BASIC_SPH_SYSTEM_
 
-typedef struct {
-    float dt;
-    float h;
-    float rho0;
-    float k;
-    float mu;
-    float g;
-} SimState;
-
-
-typedef struct {                    //particles of this type have index:
-    size_t n_liquid_particles;      //[0..n_liquid_particles]
-    size_t n_boundary_particles;    //[n_liquid_particles..n_boundary_particles]
-    size_t n_mobile_particles;      //[n_boundary_particles
-                                    //  + n_liquid_particles..n_mobile_particles] 
-    size_t n_total_particles;
-
-    //Position
-    float *x;
-    float *y;
-    float *z;
-
-    //Velocity
-    float *vx;
-    float *vy;
-    float *vz;
-    
-    // !Total force acting
-    float *Fx;
-    float *Fy;
-    float *Fz;
-
-    // ! Curvatures
-    float *nx;
-    float *ny;
-    float *nz;
-    
-    // densities
-    float *rho;
-
-    // pressures
-    float *p;
-
-    float mass; // for now all particles have the same mass
-    
-} particle_information_t;
+#include <cstddef>
+#include "Uniform_Grid.h"
+#include "Vector3T.h"
+#include "SupportingStructures.h"
 
 class Basic_SPH_System{
 private:
@@ -126,7 +81,7 @@ public:
     Uniform_Grid uniform_grid;
 
     //Container for the particle data
-    particle_information_t particles;
+    ParticlesSystemData particles;
     
     
     Basic_SPH_System(

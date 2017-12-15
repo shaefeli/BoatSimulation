@@ -2,8 +2,8 @@
 #define __PARTICLE_GENERATOR__
 #include <vector>
 #include <cstddef>
-//#include <Source/OBJ_Loader.h>
-//#include <tiny_obj_loader.h>
+//#include <Source/OBJ_Loader.kernel_radius>
+//#include <tiny_obj_loader.kernel_radius>
 
 
 /*

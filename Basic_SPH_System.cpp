@@ -7,18 +7,7 @@
 #include "Particle_Generator.h"
 
 
-template <typename T, std::size_t N>
-class Vec
-{
-public:
-    typedef T value_type;
-    static const std::size_t size = N;
-    Vec() {}
-    T& operator[](std::size_t i) { return _data[i]; }
-    const T& operator[](std::size_t i) const { return _data[i]; }
-private:
-    T _data[N];
-};
+
 
 Basic_SPH_System::Basic_SPH_System(
                                     float b_min_x,//Boundary values
@@ -44,19 +33,23 @@ void Basic_SPH_System::finilizeInit() {
 
     //Initialize the liquid particles by sampling
     Vec<float,3> x_min, x_max;
-    x_min[0] = 0.0f;
-    x_min[1] = 0.0f;
-    x_min[2] = 0.0f;
+    x_min[0] = 0.25f;
+    x_min[1] = 0.1f;
+    x_min[2] = 0.25f;
 
     x_max[0] = 1.;
     x_max[1] = 0.4;
     x_max[2] = 1.;
     uint32_t max_sample_attempts = 30;
     uint32_t seed = 1981;
-    std::vector<Vec<float,3>> liquid_samples = thinks::poissonDiskSampling(this->simState.h*0.7,x_min, x_max,max_sample_attempts, seed);
+    std::vector<Vec<float,3>> liquid_samples = thinks::poissonDiskSampling(this->simState.kernel_radius,x_min, x_max,max_sample_attempts, seed);
 
-    particles.n_liquid_particles = liquid_samples.size();
+    particles.n_liquid_particles_start = 0;
+    particles.n_liquid_particles       = static_cast<unsigned int>(liquid_samples.size());
 
+
+#define LIQUIDE_BOUNDARIS_ON 0
+#if LIQUID_BOUNDARIES_ON
     //Initialize the boudaries by sampling too. Have to do it for the three planes
     float sampling_distance_boundary = 0.6;
     //XY
@@ -65,7 +58,7 @@ void Basic_SPH_System::finilizeInit() {
     b_min_xy[1] = b_min_y;
     b_max_xy[0] = b_max_x;
     b_max_xy[1] = b_max_y;
-    std::vector<Vec<float,2>> b_samples_xy = thinks::poissonDiskSampling(this->simState.h*sampling_distance_boundary, b_min_xy, b_max_xy, max_sample_attempts, seed);
+    std::vector<Vec<float,2>> b_samples_xy = thinks::poissonDiskSampling(this->simState.kernel_radius*sampling_distance_boundary, b_min_xy, b_max_xy, max_sample_attempts, seed);
 
     //XZ
     Vec<float,2> b_min_xz, b_max_xz;
@@ -73,7 +66,7 @@ void Basic_SPH_System::finilizeInit() {
     b_min_xz[1] = b_min_z;
     b_max_xz[0] = b_max_x;
     b_max_xz[1] = b_max_z;
-    std::vector<Vec<float,2>> b_samples_xz = thinks::poissonDiskSampling(this->simState.h*sampling_distance_boundary, b_min_xz, b_max_xz, max_sample_attempts, seed);
+    std::vector<Vec<float,2>> b_samples_xz = thinks::poissonDiskSampling(this->simState.kernel_radius*sampling_distance_boundary, b_min_xz, b_max_xz, max_sample_attempts, seed);
 
     //YZ
     Vec<float,2> b_min_yz, b_max_yz;
@@ -81,30 +74,29 @@ void Basic_SPH_System::finilizeInit() {
     b_min_yz[1] = b_min_z;
     b_max_yz[0] = b_max_y;
     b_max_yz[1] = b_max_z;
-    std::vector<Vec<float,2>> b_samples_yz = thinks::poissonDiskSampling(this->simState.h*sampling_distance_boundary, b_min_yz, b_max_yz, max_sample_attempts, seed);
+    std::vector<Vec<float,2>> b_samples_yz = thinks::poissonDiskSampling(this->simState.kernel_radius*sampling_distance_boundary, b_min_yz, b_max_yz, max_sample_attempts, seed);
 
     particles.n_boundary_particles = 2*(b_samples_xy.size() + b_samples_xz.size() + b_samples_yz.size() );
+#endif
+    particles.n_boundary_particles_start = particles.n_liquid_particles_start + particles.n_liquid_particles;
+    particles.n_boundary_particles = 0;
 
 
     //Initialize the movable particle object
     std::vector<float> x_mob;
     std::vector<float> y_mob;
     std::vector<float> z_mob;
-    size_t n_mobile_particles;
+    size_t n_mobile_particles = 0;
 
     //generate_particle_cube(0.1,0.25, x_mob, y_mob, z_mob, n_mobile_particles);
+
     double scale = 0.12;
     load_model_data(0.04, scale, x_mob, y_mob, z_mob, n_mobile_particles);
 
-    size_t mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
+
+    int mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
+    particles.n_mobile_particles_start = particles.n_boundary_particles_start + particles.n_boundary_particles;
     particles.n_mobile_particles = n_mobile_particles;
-
-
-
-
-
-
-
 
 
     //Reserve memory for all the particles
@@ -132,7 +124,10 @@ void Basic_SPH_System::finilizeInit() {
     
 
     //Initialize the liquid particles
-    for( size_t i = 0; i < this->particles.n_liquid_particles; i++ ) {
+    for( size_t i = this->particles.n_liquid_particles_start;
+         i < this->particles.n_liquid_particles;
+         i++ )
+    {
         particles.x[i] = liquid_samples[i][0];
         particles.y[i] = liquid_samples[i][1];
         particles.z[i] = liquid_samples[i][2];
@@ -143,62 +138,71 @@ void Basic_SPH_System::finilizeInit() {
         particles.vz[i] = 0.0f; //(float(rand())/RAND_MAX);
     }
 
+
+#if LIQUID_BOUNDARIES_ON
     //Initialize the boundary particles
     size_t offset = 0;
     for( size_t i = 0; i < b_samples_xy.size(); i++ ) { //XY plane faces
-        particles.x[particles.n_liquid_particles                        + i] = b_samples_xy[i][0];
-        particles.y[particles.n_liquid_particles                        + i] = b_samples_xy[i][1];
-        particles.z[particles.n_liquid_particles                        + i] = b_min_z;
+        particles.x[particles.n_boundary_particles_start                + i] = b_samples_xy[i][0];
+        particles.y[particles.n_boundary_particles_start                + i] = b_samples_xy[i][1];
+        particles.z[particles.n_boundary_particles_start                + i] = b_min_z;
         
-        particles.vx[particles.n_liquid_particles                       + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vy[particles.n_liquid_particles                       + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vz[particles.n_liquid_particles                       + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
 
-        particles.x[particles.n_liquid_particles  + b_samples_xy.size() + i] = b_samples_xy[i][0];
-        particles.y[particles.n_liquid_particles  + b_samples_xy.size() + i] = b_samples_xy[i][1];
-        particles.z[particles.n_liquid_particles  + b_samples_xy.size() + i] = b_max_z;
+        particles.x[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_samples_xy[i][0];
+        particles.y[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_samples_xy[i][1];
+        particles.z[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_max_z;
         
-        particles.vx[particles.n_liquid_particles + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vy[particles.n_liquid_particles + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vz[particles.n_liquid_particles + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
     }
     offset += 2*b_samples_xy.size();
 
     for( size_t i = 0; i < b_samples_xz.size(); i++ ) { //XY plane faces
-        particles.x[particles.n_liquid_particles                        + offset + i] = b_samples_xz[i][0];
-        particles.y[particles.n_liquid_particles                        + offset + i] = b_min_y;
-        particles.z[particles.n_liquid_particles                        + offset + i] = b_samples_xz[i][1];
+        particles.x[particles.n_boundary_particles_start                        + offset + i] = b_samples_xz[i][0];
+        particles.y[particles.n_boundary_particles_start                        + offset + i] = b_min_y;
+        particles.z[particles.n_boundary_particles_start                        + offset + i] = b_samples_xz[i][1];
         
-        particles.vx[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vy[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vz[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
 
-        particles.x[particles.n_liquid_particles  + b_samples_xz.size() + offset + i] = b_samples_xy[i][0];
-        particles.y[particles.n_liquid_particles  + b_samples_xz.size() + offset + i] = b_max_y;
-        particles.z[particles.n_liquid_particles  + b_samples_xz.size() + offset + i] = b_samples_xy[i][1];;
+        particles.x[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_samples_xy[i][0];
+        particles.y[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_max_y;
+        particles.z[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_samples_xy[i][1];;
         
-        particles.vx[particles.n_liquid_particles + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vy[particles.n_liquid_particles + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vz[particles.n_liquid_particles + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
     }
     offset += 2*b_samples_xz.size();
     for( size_t i = 0; i < b_samples_yz.size(); i++ ) { //XY plane faces
-        particles.x[particles.n_liquid_particles                        + offset + i] = b_min_x;
-        particles.y[particles.n_liquid_particles                        + offset + i] = b_samples_yz[i][0];
-        particles.z[particles.n_liquid_particles                        + offset + i] = b_samples_yz[i][1];
+        particles.x[particles.n_boundary_particles_start                        + offset + i] = b_min_x;
+        particles.y[particles.n_boundary_particles_start                        + offset + i] = b_samples_yz[i][0];
+        particles.z[particles.n_boundary_particles_start                        + offset + i] = b_samples_yz[i][1];
         
-        particles.vx[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vy[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vz[particles.n_liquid_particles +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
 
-        particles.x[particles.n_liquid_particles  + b_samples_yz.size() + offset + i] = b_max_x;
-        particles.y[particles.n_liquid_particles  + b_samples_yz.size() + offset + i] = b_samples_yz[i][0];
-        particles.z[particles.n_liquid_particles  + b_samples_yz.size() + offset + i] = b_samples_yz[i][1];
+        particles.x[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_max_x;
+        particles.y[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_samples_yz[i][0];
+        particles.z[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_samples_yz[i][1];
         
-        particles.vx[particles.n_liquid_particles + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vy[particles.n_liquid_particles + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
-        particles.vz[particles.n_liquid_particles + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
     }
+
+
+    for (int i = 0; i < particles.n_boundary_particles; i++){
+        particles.rho[particles.n_boundary_particles_start + i] = simState.rho0;
+    }
+#endif
+
     //Initialize the mobile particles
     //Offsets for the mobile particles position (remember that at start they are centered around zero)
 
@@ -206,6 +210,7 @@ void Basic_SPH_System::finilizeInit() {
     float x_offset = 0.5f;
     float y_offset = 0.2f;
     float z_offset = -0.3f;
+
     this->mobile_mass_center_x = x_offset;
     this->mobile_mass_center_y = y_offset;
     this->mobile_mass_center_z = z_offset;
@@ -215,32 +220,35 @@ void Basic_SPH_System::finilizeInit() {
     this->mobile_angle_psi = 0.;
 
 
+    
+    for( size_t i = particles.n_mobile_particles_start;
+         i < particles.n_mobile_particles_start + n_mobile_particles;
+         i++ )
+    {
+        particles.x[i] = x_mob[i] + x_offset;
+        particles.y[i] = y_mob[i] + y_offset;
+        particles.z[i] = z_mob[i] + z_offset;
 
-    for( int i = 0; i < n_mobile_particles; i++ ) {
-        particles.x[mobile_offset + i] = x_mob[i] + x_offset;
-        particles.y[mobile_offset + i] = y_mob[i] + y_offset;
-        particles.z[mobile_offset + i] = z_mob[i] + z_offset;
+        particles.vx[i] = 0.f;
+        particles.vy[i] = 0.f;
+        particles.vz[i] = 0.f;
 
-        particles.vx[mobile_offset + i] = 0.f;
-        particles.vy[mobile_offset + i] = 0.f;
-        particles.vz[mobile_offset + i] = 0.f;
+        particles.rho[i] = simState.rho0 * 2;
     }
-
     this->flag_finilized = true;
 }
 
 void Basic_SPH_System::setSimState(SimState state){
     this->simState = state;
-    this->particles.mass = 0.2; //static_cast<float>(4. / 3. * M_PI * pow(state.h, 3));
-
+    this->particles.mass = 0.2; //static_cast<float>(4. / 3. * M_PI * pow(state.kernel_radius, 3));
 
     /**
      * Constants pre-calculated
      */
-    this->h9 = pow(state.h, 9);
-    this->h6 = pow(state.h, 6);
-    this->h3 = pow(state.h, 3);
-    this->h2 = pow(state.h, 2);
+    this->h9 = pow(state.kernel_radius, 9);
+    this->h6 = pow(state.kernel_radius, 6);
+    this->h3 = pow(state.kernel_radius, 3);
+    this->h2 = pow(state.kernel_radius, 2);
     
     this->h9_315     = 315./(64*M_PI*h9);
     this->h6_15      = 15./(    M_PI * h6);
@@ -371,7 +379,7 @@ void Basic_SPH_System::calculate_Densities(){
 
     std::vector<size_t> near_cells;
     // iterate ALL particles in the system
-    for(int i = 0; i < this->particles.n_liquid_particles; i++){
+    for(int i = particles.n_liquid_particles_start; i < this->particles.n_liquid_particles; i++){
         near_cells.clear();
         this->uniform_grid.query_neighbors(
                 this->particles.x[i],
@@ -381,14 +389,14 @@ void Basic_SPH_System::calculate_Densities(){
         );
 
         // iterate cells
-        float rho = this->evalKernel_poly6(i,i,this->simState.h);
+        float rho = this->evalKernel_poly6(i,i,this->simState.kernel_radius);
         for (auto cellId : near_cells){
             size_t *cell     = this->uniform_grid.cells[    cellId];
             size_t cell_size = this->uniform_grid.cell_size[cellId];
 
             for (int j = 0; j < cell_size; j++){
                 auto particleID = static_cast<int>(cell[j]); // in equations that's our J index
-                rho += this->evalKernel_poly6(i,particleID, this->simState.h);
+                rho += this->evalKernel_poly6(i,particleID, this->simState.kernel_radius);
             }
         }
         this->particles.rho[i] = this->particles.mass * rho;
@@ -398,7 +406,10 @@ void Basic_SPH_System::calculate_Densities(){
 void Basic_SPH_System::calculate_Curvatures() {
     std::vector<size_t> near_cells;
     // iterate ALL particles in the system
-    for(int i = 0; i < this->particles.n_liquid_particles; i++){
+    for(int i = this->particles.n_liquid_particles_start;
+        i < this->particles.n_liquid_particles;
+        i++)
+    {
         this->particles.nx[i] = 0;
         this->particles.ny[i] = 0;
         this->particles.nz[i] = 0;
@@ -422,16 +433,16 @@ void Basic_SPH_System::calculate_Curvatures() {
                 auto particleID = static_cast<int>(cell[j]); // in equations that's our J index
                 ijVec = this->ij_vector(i, particleID);
 
-                float n_val = this->particles.mass / this->particles.rho[particleID] * this->evalKernel_poly6_gradient(i,particleID,simState.h);
+                float n_val = this->particles.mass / this->particles.rho[particleID] * this->evalKernel_poly6_gradient(i,particleID,simState.kernel_radius);
                 this->particles.nx[i] += n_val * ijVec.x();
                 this->particles.ny[i] += n_val * ijVec.y();
                 this->particles.nz[i] += n_val * ijVec.z();
             }
         }
 
-        this->particles.nx[i] *= this->simState.h;
-        this->particles.ny[i] *= this->simState.h;
-        this->particles.nz[i] *= this->simState.h;
+        this->particles.nx[i] *= this->simState.kernel_radius;
+        this->particles.ny[i] *= this->simState.kernel_radius;
+        this->particles.nz[i] *= this->simState.kernel_radius;
     }
 
 }
@@ -440,10 +451,10 @@ void Basic_SPH_System::calculate_Pressures() {
     float rho0 = this->simState.rho0;
     float k = this->simState.k;
     
-    for(int i = 0; i < this->particles.n_liquid_particles; i++){
+    for(int i = this->particles.n_liquid_particles_start; i < this->particles.n_liquid_particles; i++){
         float rho = this->particles.rho[i];
         this->particles.p[i] = (float) std::max( (float)(k * (pow(rho / rho0, 7) - 1) ), 0.0f);
-//        this->particles.p[i] = (float) std::max( (float)(k * (rho - rho0)), 0.0f);
+//        this->particles.p[i] = (float) std::max( (float)(k * (rho - rho0)), 0.0f); // another model
     }
 }
 
@@ -451,7 +462,7 @@ void Basic_SPH_System::calculate_Forces() {
 
     std::vector<size_t> near_cells;
     // iterate ALL particles in the system
-    for(int i = 0; i < this->particles.n_liquid_particles; i++){
+    for(int i = this->particles.n_liquid_particles_start; i < this->particles.n_liquid_particles; i++){
 
         this->particles.Fx[i] = 0.f;
         this->particles.Fy[i] = 0.f;
@@ -510,16 +521,16 @@ void Basic_SPH_System::calculate_Forces() {
                 Vector3T<float> ijVec = this->ij_vector(i, particleID);
 
 //                std::cout << "[ " << i << " - " << particleID << " ] = " << sqrt(ijVec.squaredLength()) << std::endl;
-                float gradP =  this->evalkernel_spiky_gradient(i, particleID, this->simState.h);
+                float gradP =  this->evalkernel_spiky_gradient(i, particleID, this->simState.kernel_radius);
                 gradP *=  rhoi * mj * ( pi /(rhoi * rhoi) + pj / (rhoj * rhoj) );
 //                F_p *=  mj * ( pi + pj)/(2*rhoj);
-                F_press_x += - mi/rhoi * gradP * ijVec.x();
-                F_press_y += - mi/rhoi * gradP * ijVec.y();
-                F_press_z += - mi/rhoi * gradP * ijVec.z();
+                F_press_x += - mi * gradP * ijVec.x();
+                F_press_y += - mi * gradP * ijVec.y();
+                F_press_z += - mi * gradP * ijVec.z();
 
 
                 ijVec.normalize();
-                float F_coh = -this->gamma * mi * mj * this->evalC_spline(i,particleID, this->simState.h);
+                float F_coh = -this->gamma * mi * mj * this->evalC_spline(i,particleID, this->simState.kernel_radius);
                 F_coh_x = F_coh * ijVec.x();
                 F_coh_y = F_coh * ijVec.y();
                 F_coh_z = F_coh * ijVec.z();
@@ -535,7 +546,7 @@ void Basic_SPH_System::calculate_Forces() {
                 F_st_z += Kij * (F_coh_z + F_cur_z);
 
                 // Calc Force from viscosity
-                float F_visc = this->simState.mu *this->evalKernel_visc_laplacian(i,particleID,this->simState.h);
+                float F_visc = this->simState.mu *this->evalKernel_visc_laplacian(i,particleID,this->simState.kernel_radius);
 
                 F_visc_x +=  mi * F_visc / rhoi * (this->particles.vx[particleID] - this->particles.vx[i]) / rhoj;
                 F_visc_y +=  mi * F_visc / rhoi * (this->particles.vy[particleID] - this->particles.vy[i]) / rhoj;
@@ -547,9 +558,6 @@ void Basic_SPH_System::calculate_Forces() {
         this->particles.Fy[i] = F_press_y  +  F_visc_y + F_st_y + F_ext_y;
         this->particles.Fz[i] = F_press_z  +  F_visc_z + F_st_z;
 
-//        / rhoi
-//        / rhoi
-//        / rhoi
     }
 }
 
@@ -587,7 +595,7 @@ void Basic_SPH_System::run_step(float dt)
     move_solid_object( 0., 0., 1*dt);
 
     //Update the neighbor information
-    uniform_grid.build(particles.x,particles.y,particles.z,particles.n_liquid_particles);
+    uniform_grid.build(particles.x,particles.y,particles.z,particles.n_total_particles);
     //uniform_grid.build(particles.x,particles.y,particles.z,particles.n_total_particles);
 
     //This way we can choose to have a function per particle
@@ -619,8 +627,8 @@ void Basic_SPH_System::run_step(float dt)
         if (this->particles.x[i] < 0 ) {        particles.x[i] = 0.0001f; particles.vx[i] = 0.0f; }
         if (this->particles.x[i] > b_max_x )  { particles.x[i] = b_max_x; particles.vx[i]  = 0.0f; }
 
-        if (this->particles.y[i] < 0 ) {       particles.y[i] = 0.0001f;     particles.vy[i] = 0.; }
-        if (this->particles.y[i] > b_max_y)  { particles.y[i] = b_max_y;  particles.vy[i] = 0.; }
+        if (this->particles.y[i] < 0 ) {       particles.y[i] = 0.0001f;  particles.vy[i] = 0.f; }
+        if (this->particles.y[i] > b_max_y)  { particles.y[i] = b_max_y;  particles.vy[i] = 0.f; }
 
         if (this->particles.z[i] < 0 ) {       particles.z[i] = 0.0001f; particles.vz[i] = 0.0f; }
         if (this->particles.z[i] > b_max_z)  { particles.z[i] = b_max_z;  particles.vz[i] = 0.0f; }
