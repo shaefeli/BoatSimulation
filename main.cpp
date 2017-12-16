@@ -18,8 +18,9 @@ int main(int argc, char** argv){
 
     
     SimState simState;
+    int startIt = 300;
+    int endIt = 400;
 //    simState.dt = 0.001;
-
     simState.g  = 9.8;
     simState.particle_radius = 0.02f ;
     simState.kernel_radius   = 4.0f * simState.particle_radius;
@@ -65,9 +66,24 @@ int main(int argc, char** argv){
     renderer.init(argc,argv);
     pciSph.debugRender = &renderer;
 //    renderer.draw();
+    unsigned int it=0;
+    bool render = false;
 
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << pciSph.getCurrentTime() << "] sec\n";
+        if(render and it >= startIt && it <= endIt){
+            maya.writeToMaya(it,bsph.particles.x,
+                                bsph.particles.y,
+                                bsph.particles.z,
+                                bsph.particles.n_liquid_particles);
+            maya.writeBoatInfos(bsph.mobile_mass_center_x,
+                                bsph.mobile_mass_center_y,
+                                bsph.mobile_mass_center_z,
+                                bsph.mobile_angle_phi,
+                                bsph.mobile_angle_theta,
+                                bsph.mobile_angle_psi,
+                                it);
+        } 
         pciSph.run_step();
         renderer.draw();
         ///std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -135,7 +151,7 @@ int main(int argc, char** argv){
                                 bsph.mobile_angle_psi,
                                 it);
         } 
-        bsph.run_step( state.dt );
+        bsph.run_step( simState.dt );
         renderer.draw();
         it++;
 

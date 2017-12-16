@@ -24,3 +24,4 @@ clean:
 	rm -rf *.o
 	rm pbs_sim
 	rm frameFiles/*
+	rm infoFile
