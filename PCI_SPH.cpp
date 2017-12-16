@@ -55,6 +55,51 @@ PCI_SPH::PCI_SPH(
      */
     p_initializeBoundary(); // for now ( and maybe forever) we treat boundary box by
 
+    this->particles.n_boundary_particles_start = particles.n_liquid_particles_start + particles.n_liquid_particles;
+    this->particles.n_boundary_particles = 0;
+    
+    int seed = 1942;
+    int max_sample_attempts = 3;
+    float b_min_x = bBox.x1;
+    float b_min_y = bBox.y1;
+    float b_min_z = bBox.z1;
+    float b_max_x = bBox.x2;
+    float b_max_y = bBox.y2;
+    float b_max_z = bBox.z2;
+    std::cout<<b_min_x<<","<<b_min_y<<","<<b_min_z<<std::endl;
+    std::cout<<b_max_x<<","<<b_max_y<<","<<b_max_z<<std::endl;
+    float sampling_distance_boundary = 0.6;
+    float sampling_radius = 0.01;
+    //XY
+    Vec<float,2> b_min_xy, b_max_xy;
+    b_min_xy[0] = b_min_x;
+    b_min_xy[1] = b_min_y;
+    b_max_xy[0] = b_max_x;
+    b_max_xy[1] = b_max_y;
+    std::vector<Vec<float,2>> b_samples_xy = thinks::poissonDiskSampling(sampling_radius, b_min_xy, b_max_xy, max_sample_attempts, seed);
+
+    //XZ
+    Vec<float,2> b_min_xz, b_max_xz;
+    b_min_xz[0] = b_min_x;
+    b_min_xz[1] = b_min_z;
+    b_max_xz[0] = b_max_x;
+    b_max_xz[1] = b_max_z;
+    std::vector<Vec<float,2>> b_samples_xz = thinks::poissonDiskSampling(sampling_radius, b_min_xz, b_max_xz, max_sample_attempts, seed);
+
+    //YZ
+    Vec<float,2> b_min_yz, b_max_yz;
+    b_min_yz[0] = b_min_y;
+    b_min_yz[1] = b_min_z;
+    b_max_yz[0] = b_max_y;
+    b_max_yz[1] = b_max_z;
+    std::vector<Vec<float,2>> b_samples_yz = thinks::poissonDiskSampling(sampling_radius, b_min_yz, b_max_yz, max_sample_attempts, seed);
+
+    particles.n_boundary_particles = 2*(b_samples_xy.size() + b_samples_xz.size() + b_samples_yz.size() );
+    std::cerr<<"Number of boundary particles:"<<particles.n_boundary_particles<<std::endl;
+
+   
+
+
 
     /**
      *  Load BOAT info - do initialize it here (see below)
@@ -101,6 +146,72 @@ PCI_SPH::PCI_SPH(
         particles.vy[i] = 0.0f;
         particles.vz[i] = 0.0f;
     }
+
+
+     //Initialize the boundary particles
+    size_t offset = 0;
+    for( size_t i = 0; i < b_samples_xy.size(); i++ ) { //XY plane faces
+        particles.x[particles.n_boundary_particles_start                + i] = b_samples_xy[i][0];
+        particles.y[particles.n_boundary_particles_start                + i] = b_samples_xy[i][1];
+        particles.z[particles.n_boundary_particles_start                + i] = b_min_z;
+        
+        particles.vx[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
+
+        particles.x[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_samples_xy[i][0];
+        particles.y[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_samples_xy[i][1];
+        particles.z[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_max_z;
+        
+        particles.vx[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+    }
+    offset += 2*b_samples_xy.size();
+
+    for( size_t i = 0; i < b_samples_xz.size(); i++ ) { //XY plane faces
+        particles.x[particles.n_boundary_particles_start                        + offset + i] = b_samples_xz[i][0];
+        particles.y[particles.n_boundary_particles_start                        + offset + i] = b_min_y;
+        particles.z[particles.n_boundary_particles_start                        + offset + i] = b_samples_xz[i][1];
+        
+        particles.vx[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+
+        particles.x[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_samples_xy[i][0];
+        particles.y[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_max_y;
+        particles.z[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_samples_xy[i][1];;
+        
+        particles.vx[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+    }
+    offset += 2*b_samples_xz.size();
+    for( size_t i = 0; i < b_samples_yz.size(); i++ ) { //XY plane faces
+        particles.x[particles.n_boundary_particles_start                        + offset + i] = b_min_x;
+        particles.y[particles.n_boundary_particles_start                        + offset + i] = b_samples_yz[i][0];
+        particles.z[particles.n_boundary_particles_start                        + offset + i] = b_samples_yz[i][1];
+        
+        particles.vx[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+
+        particles.x[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_max_x;
+        particles.y[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_samples_yz[i][0];
+        particles.z[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_samples_yz[i][1];
+        
+        particles.vx[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+    }
+
+
+    for (int i = 0; i < particles.n_boundary_particles; i++){
+        particles.rho[particles.n_boundary_particles_start + i] = simState.rho0;
+    }
+
+
+
 
 
     /**
@@ -170,8 +281,7 @@ void PCI_SPH::preCalculateCoefficients() {
 }
 
 void PCI_SPH::p_initializeBoundary()  {
-    this->particles.n_boundary_particles_start = particles.n_liquid_particles_start + particles.n_liquid_particles;
-    this->particles.n_boundary_particles = 0;
+    
 }
 
 vector<Vec<float, 3>> PCI_SPH::p_createSamplingLiquid() const {
@@ -415,15 +525,16 @@ void PCI_SPH::run_step() {
         this->particles.y_star[i] = particles.y[i] + simState.dt * particles.vy_star[i];
         this->particles.z_star[i] = particles.z[i] + simState.dt * particles.vz_star[i];
 
+        
+        //Boundary condition!
+        //if (        particles.x_star[i] <= bBox.x1)  { particles.x_star[i] = bBox.x1; particles.vx_star[i] *= -0.5f; }
+        //else if (   particles.x_star[i] >= bBox.x2)  { particles.x_star[i] = bBox.x2; particles.vx_star[i] *= -0.5f; }
 
-        if (        particles.x_star[i] <= bBox.x1)  { particles.x_star[i] = bBox.x1; particles.vx_star[i] *= -0.5f; }
-        else if (   particles.x_star[i] >= bBox.x2)  { particles.x_star[i] = bBox.x2; particles.vx_star[i] *= -0.5f; }
+        //if (        particles.y_star[i] <= bBox.y1)  { particles.y_star[i] = bBox.y1; particles.vy_star[i] *= -0.5f; }
+        //else if (   particles.y_star[i] >= bBox.y2)  { particles.y_star[i] = bBox.y2; particles.vy_star[i] *= -0.5f; }
 
-        if (        particles.y_star[i] <= bBox.y1)  { particles.y_star[i] = bBox.y1; particles.vy_star[i] *= -0.5f; }
-        else if (   particles.y_star[i] >= bBox.y2)  { particles.y_star[i] = bBox.y2; particles.vy_star[i] *= -0.5f; }
-
-        if (        particles.z_star[i] <= bBox.z1)  { particles.z_star[i] = bBox.z1; particles.vz_star[i] *= -0.5f; }
-        else if (   particles.z_star[i] >= bBox.z2)  { particles.z_star[i] = bBox.z2; particles.vz_star[i] *= -0.5f; }
+        //if (        particles.z_star[i] <= bBox.z1)  { particles.z_star[i] = bBox.z1; particles.vz_star[i] *= -0.5f; }
+        //else if (   particles.z_star[i] >= bBox.z2)  { particles.z_star[i] = bBox.z2; particles.vz_star[i] *= -0.5f; }
     }
 
     // Start to iterate with pressure to minimise error of RHO --> should be close to RHO_0 = reference density
@@ -541,7 +652,7 @@ void PCI_SPH::run_step() {
         particles.y[i] = particles.y_star[i];
         particles.z[i] = particles.z_star[i];
 
-        this->implyBCOnParticle(i);
+        //this->implyBCOnParticle(i);
     }
 
 
@@ -647,14 +758,14 @@ void PCI_SPH::updateParticlesPositionAndVelocity() {
 }
 
 void PCI_SPH::implyBCOnParticle(int i)  {
-    if (        particles.x[i] <= bBox.x1)  { particles.x[i] = bBox.x1; particles.vx[i] *= 0.f; }
-    else if (   particles.x[i] >= bBox.x2)  { particles.x[i] = bBox.x2; particles.vx[i] *= 0.f; }
+    //if (        particles.x[i] <= bBox.x1)  { particles.x[i] = bBox.x1; particles.vx[i] *= 0.f; }
+    //else if (   particles.x[i] >= bBox.x2)  { particles.x[i] = bBox.x2; particles.vx[i] *= 0.f; }
 
-    if (        particles.y[i] <= bBox.y1)  { particles.y[i] = bBox.y1; particles.vy[i] *= 0.f; }
-    else if (   particles.y[i] >= bBox.y2)  { particles.y[i] = bBox.y2; particles.vy[i] *= 0.f; }
+    //if (        particles.y[i] <= bBox.y1)  { particles.y[i] = bBox.y1; particles.vy[i] *= 0.f; }
+    //else if (   particles.y[i] >= bBox.y2)  { particles.y[i] = bBox.y2; particles.vy[i] *= 0.f; }
 
-    if (        particles.z[i] <= bBox.z1)  { particles.z[i] = bBox.z1; particles.vz[i] *= 0.f; }
-    else if (   particles.z[i] >= bBox.z2)  { particles.z[i] = bBox.z2; particles.vz[i] *= 0.f; }
+    //if (        particles.z[i] <= bBox.z1)  { particles.z[i] = bBox.z1; particles.vz[i] *= 0.f; }
+    //else if (   particles.z[i] >= bBox.z2)  { particles.z[i] = bBox.z2; particles.vz[i] *= 0.f; }
 }
 
 void PCI_SPH::calculate_Densities() {
