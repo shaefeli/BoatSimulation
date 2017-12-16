@@ -69,9 +69,28 @@ int main(int argc, char** argv){
 
     unsigned int it=0;
     bool render = false;
-
+    
+    std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+    
+    double elapsed_time = 0;
+    size_t n_fps = 0;
+    double avg_fps = 0;
     while(!glfwWindowShouldClose(renderer.getWindow())){
-        std::cout << "[" << pciSph.getCurrentTime() << "] sec\n";
+        std::cout << "[Simulation time:" << pciSph.getCurrentTime() << "] sec\n";
+        std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+        std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+        std::cout << "[Frame time:" << time_span.count() << "] sec\n";
+        std::cout << "[FPS:" << avg_fps << "] sec\n";
+        elapsed_time += time_span.count();
+        n_fps++;
+        if( n_fps == 10 ) {
+            avg_fps = n_fps/elapsed_time;
+            //std::cout << "[FPS:" << n_fps/elapsed_time << "] sec\n";
+            n_fps = 0;
+            elapsed_time = 0;
+        }
+
+        t1 = std::chrono::steady_clock::now();
 
         if(render and it >= startIt && it <= endIt){
             maya.writeToMaya(it,
