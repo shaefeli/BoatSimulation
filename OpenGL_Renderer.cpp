@@ -43,10 +43,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     else if ( oglr != NULL && key == GLFW_KEY_0 && action == GLFW_PRESS)
     {
+        std::cout<<"display boudns switched"<<std::endl;
         oglr->display_boundary = not oglr->display_boundary;
     }
     else if ( oglr != NULL && key == GLFW_KEY_9 && action == GLFW_PRESS)
     {
+        std::cout<<"display model switched"<<std::endl;
         oglr->display_mobile = not oglr->display_mobile;
     }
     else if ( oglr != NULL && key == GLFW_KEY_A && action == GLFW_PRESS)
@@ -772,7 +774,11 @@ void OpenGL_Renderer::draw_particles_elements( )
         draw_element(render_info.x[i],render_info.y[i],render_info.z[i]);
     }
     part_offset += render_info.n_liquid_particles;
+    //std::cout<<"total parts:"<<render_info.n_total_particles<<std::endl;
+    //std::cout<<"liq parts:"<<render_info.n_liquid_particles<<std::endl;
+    //std::cout<<"parts:"<<part_offset<<std::endl;
     if( not display_boundary ) {;
+        //std::cout<<"boundary parts:"<<render_info.n_boundary_particles<<std::endl;
         for( int i = part_offset; i < part_offset + render_info.n_boundary_particles; i++ ) {
             glUniform3f(color_uniform, color_buffer[3*i], color_buffer[3*i+1], color_buffer[3*i+2]);
             draw_element(render_info.x[i],render_info.y[i],render_info.z[i]);
@@ -780,9 +786,12 @@ void OpenGL_Renderer::draw_particles_elements( )
     }
     part_offset += render_info.n_boundary_particles;
     if( not display_mobile ) {;
+        std::cout<<"mobile parts:"<<render_info.n_mobile_particles<<std::endl;
         for( int i = part_offset; i < part_offset + render_info.n_mobile_particles; i++ ) {
             glUniform3f(color_uniform, color_buffer[3*i], color_buffer[3*i+1], color_buffer[3*i+2]);
+            //glUniform3f(color_uniform, 1., 0., 0.);
             draw_element(render_info.x[i],render_info.y[i],render_info.z[i]);
+            //std::cout<<"mobile parts:"<<render_info.x[i]<<","<<render_info.y[i]<<","<<render_info.z[i]<<std::endl;
         }
     }
 
