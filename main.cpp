@@ -36,15 +36,15 @@ int main(int argc, char** argv){
 #if METHOD_PCI_SPH
 
     BoundaryBox bBox{
-            .x1 = 0.f,  .x2 = 0.25f,
+            .x1 = 0.f,  .x2 = 0.3f,
             .y1 = 0.f,  .y2 = 1.0f,
             .z1 = 0.f,  .z2 = 1.f
     };
 
     ParticlesInitialSpawningBox iBox{
-            .x1 = 0.0f,     .x2 = 0.24f,
-            .y1 = 0.05f,    .y2 = 0.9f,
-            .z1 = 0.0f,     .z2 = 0.24f,
+            .x1 = 0.1f,     .x2 = 0.24f,
+            .y1 = 0.1f,    .y2 = 0.9f,
+            .z1 = 0.1f,     .z2 = 0.34f,
             .spawningRadius = simState.kernel_radius * 0.5f
     };
     UniformGridSplit gridSplit{

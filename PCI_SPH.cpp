@@ -69,7 +69,7 @@ PCI_SPH::PCI_SPH(
     std::cout<<b_min_x<<","<<b_min_y<<","<<b_min_z<<std::endl;
     std::cout<<b_max_x<<","<<b_max_y<<","<<b_max_z<<std::endl;
     float sampling_distance_boundary = 0.6;
-    float sampling_radius = 0.01;
+    float sampling_radius = 0.02;
     //XY
     Vec<float,2> b_min_xy, b_max_xy;
     b_min_xy[0] = b_min_x;
@@ -154,18 +154,30 @@ PCI_SPH::PCI_SPH(
         particles.x[particles.n_boundary_particles_start                + i] = b_samples_xy[i][0];
         particles.y[particles.n_boundary_particles_start                + i] = b_samples_xy[i][1];
         particles.z[particles.n_boundary_particles_start                + i] = b_min_z;
+        particles.x_star[particles.n_boundary_particles_start                + i] = b_samples_xy[i][0];
+        particles.y_star[particles.n_boundary_particles_start                + i] = b_samples_xy[i][1];
+        particles.z_star[particles.n_boundary_particles_start                + i] = b_min_z;
         
         particles.vx[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vy[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vz[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx_star[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy_star[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz_star[particles.n_boundary_particles_start               + i] = 0.0f; //(float(rand())/RAND_MAX);
 
         particles.x[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_samples_xy[i][0];
         particles.y[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_samples_xy[i][1];
         particles.z[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_max_z;
+        particles.x_star[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_samples_xy[i][0];
+        particles.y_star[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_samples_xy[i][1];
+        particles.z_star[particles.n_boundary_particles_start  + b_samples_xy.size() + i] = b_max_z;
         
         particles.vx[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vy[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vz[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx_star[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy_star[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz_star[particles.n_boundary_particles_start + b_samples_xy.size() + i] = 0.0f; //(float(rand())/RAND_MAX);
     }
     offset += 2*b_samples_xy.size();
 
@@ -173,38 +185,86 @@ PCI_SPH::PCI_SPH(
         particles.x[particles.n_boundary_particles_start                        + offset + i] = b_samples_xz[i][0];
         particles.y[particles.n_boundary_particles_start                        + offset + i] = b_min_y;
         particles.z[particles.n_boundary_particles_start                        + offset + i] = b_samples_xz[i][1];
+        particles.x_star[particles.n_boundary_particles_start                        + offset + i] = b_samples_xz[i][0];
+        particles.y_star[particles.n_boundary_particles_start                        + offset + i] = b_min_y;
+        particles.z_star[particles.n_boundary_particles_start                        + offset + i] = b_samples_xz[i][1];
         
         particles.vx[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vy[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vz[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx_star[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy_star[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz_star[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
 
         particles.x[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_samples_xy[i][0];
         particles.y[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_max_y;
         particles.z[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_samples_xy[i][1];;
+        particles.x_star[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_samples_xy[i][0];
+        particles.y_star[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_max_y;
+        particles.z_star[particles.n_boundary_particles_start  + b_samples_xz.size() + offset + i] = b_samples_xy[i][1];;
         
         particles.vx[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vy[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vz[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx_star[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy_star[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz_star[particles.n_boundary_particles_start + b_samples_xz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
     }
     offset += 2*b_samples_xz.size();
     for( size_t i = 0; i < b_samples_yz.size(); i++ ) { //XY plane faces
         particles.x[particles.n_boundary_particles_start                        + offset + i] = b_min_x;
         particles.y[particles.n_boundary_particles_start                        + offset + i] = b_samples_yz[i][0];
         particles.z[particles.n_boundary_particles_start                        + offset + i] = b_samples_yz[i][1];
+        particles.x_star[particles.n_boundary_particles_start                        + offset + i] = b_min_x;
+        particles.y_star[particles.n_boundary_particles_start                        + offset + i] = b_samples_yz[i][0];
+        particles.z_star[particles.n_boundary_particles_start                        + offset + i] = b_samples_yz[i][1];
         
         particles.vx[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vy[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vz[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx_star[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy_star[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz_star[particles.n_boundary_particles_start +                     + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
 
         particles.x[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_max_x;
         particles.y[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_samples_yz[i][0];
         particles.z[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_samples_yz[i][1];
+        particles.x_star[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_max_x;
+        particles.y_star[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_samples_yz[i][0];
+        particles.z_star[particles.n_boundary_particles_start  + b_samples_yz.size() + offset + i] = b_samples_yz[i][1];
         
         particles.vx[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vy[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
         particles.vz[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vx_star[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vy_star[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
+        particles.vz_star[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
     }
+    
+        //particles.vx[i] = vx;
+        //particles.vy[i] = vy;
+        //particles.vz[i] = vz;
 
+        //particles.vx_star[i] = vx;
+        //particles.vy_star[i] = vy;
+        //particles.vz_star[i] = vz;
+
+
+        //float offset_x = simState.dt * vx;
+        //float offset_y = simState.dt * vy;
+        //float offset_z = simState.dt * vz;
+
+        //particles.x[i] += offset_x;
+        //particles.y[i] += offset_y;
+        //particles.z[i] += offset_z;
+
+        //particles.x_star[i] += offset_x;
+        //particles.y_star[i] += offset_y;
+        //particles.z_star[i] += offset_z;
+
+        //mobile_mass_center_x += offset_x;
+        //mobile_mass_center_y += offset_y;
+        //mobile_mass_center_z += offset_z;
 
     for (int i = 0; i < particles.n_boundary_particles; i++){
         particles.rho[particles.n_boundary_particles_start + i] = simState.rho0;
