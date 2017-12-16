@@ -47,7 +47,6 @@ int main(int argc, char** argv){
             .z1 = 0.0f,     .z2 = 0.24f,
             .spawningRadius = simState.kernel_radius * 0.5f
     };
-
     UniformGridSplit gridSplit{
             .cells_x = simState.kernel_radius*1.0f,
             .cells_y = simState.kernel_radius*1.0f,
@@ -72,17 +71,17 @@ int main(int argc, char** argv){
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << pciSph.getCurrentTime() << "] sec\n";
         if(render and it >= startIt && it <= endIt){
-            maya.writeToMaya(it,bsph.particles.x,
-                                bsph.particles.y,
-                                bsph.particles.z,
-                                bsph.particles.n_liquid_particles);
-            maya.writeBoatInfos(bsph.mobile_mass_center_x,
-                                bsph.mobile_mass_center_y,
-                                bsph.mobile_mass_center_z,
-                                bsph.mobile_angle_phi,
-                                bsph.mobile_angle_theta,
-                                bsph.mobile_angle_psi,
-                                it);
+            //maya.writeToMaya(it,bsph.particles.x,
+            //                    bsph.particles.y,
+            //                    bsph.particles.z,
+            //                    bsph.particles.n_liquid_particles);
+            //maya.writeBoatInfos(bsph.mobile_mass_center_x,
+            //                    bsph.mobile_mass_center_y,
+            //                    bsph.mobile_mass_center_z,
+            //                    bsph.mobile_angle_phi,
+            //                    bsph.mobile_angle_theta,
+            //                    bsph.mobile_angle_psi,
+            //                    it);
         } 
         pciSph.run_step();
         renderer.draw();

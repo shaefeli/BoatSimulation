@@ -788,8 +788,8 @@ void OpenGL_Renderer::draw_particles_elements( )
     if( not display_mobile ) {;
         std::cout<<"mobile parts:"<<render_info.n_mobile_particles<<std::endl;
         for( int i = part_offset; i < part_offset + render_info.n_mobile_particles; i++ ) {
-            glUniform3f(color_uniform, color_buffer[3*i], color_buffer[3*i+1], color_buffer[3*i+2]);
-            //glUniform3f(color_uniform, 1., 0., 0.);
+            //glUniform3f(color_uniform, color_buffer[3*i], color_buffer[3*i+1], color_buffer[3*i+2]);
+            glUniform3f(color_uniform, 1., 0., 0.);
             draw_element(render_info.x[i],render_info.y[i],render_info.z[i]);
             //std::cout<<"mobile parts:"<<render_info.x[i]<<","<<render_info.y[i]<<","<<render_info.z[i]<<std::endl;
         }

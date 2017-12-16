@@ -104,9 +104,9 @@ PCI_SPH::PCI_SPH(
     /**
      *  Initialize the BOAT particles
      */
-    float x_offset = 0.1f;
+    float x_offset = 0.2f;
     float y_offset = 0.2f;
-    float z_offset = -0.8f;
+    float z_offset = 0.5f;
     for( size_t i = particles.n_mobile_particles_start;
                 i < particles.n_mobile_particles_start + particles.n_mobile_particles;
                 i++ )
@@ -306,7 +306,7 @@ void PCI_SPH::move_solid_object( float x, float y, float z )
 
 void PCI_SPH::run_step() {
 
-    move_solid_object( 0., 0., 1*0.001);
+    //move_solid_object( 0., 0., 1*0.002);
 
     //std::cerr<<"run_step:"<<std::endl;
     uniform_grid->build(particles.x, particles.y, particles.z,
