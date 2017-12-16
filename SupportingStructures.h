@@ -106,6 +106,7 @@ typedef struct ParticlesAllInfoStorage{                    //particles of this t
 
 
     void allocateMemoryForNParticles(unsigned int N){
+        std::cout<<"Allocating memory N:"<<N<<std::endl;
         x = new float[N];
         y = new float[N];
         z = new float[N];

@@ -56,9 +56,9 @@ PCI_SPH::PCI_SPH(
     std::vector<float> z_mob;
     size_t n_mobile_particles = 0;
 
-//    double scale = 0.1;
-//    load_model_data(0.01, scale, x_mob, y_mob, z_mob, n_mobile_particles);
-    this->generate_particle_cube(.2f, 0.02, x_mob, y_mob,z_mob,n_mobile_particles);
+    double scale = 0.1;
+    load_model_data(0.03, scale, x_mob, y_mob, z_mob, n_mobile_particles);
+    //this->generate_particle_cube(.2f, 0.02, x_mob, y_mob,z_mob,n_mobile_particles);
     int mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
     this->particles.n_mobile_particles_start = particles.n_boundary_particles_start + particles.n_boundary_particles;
     this->particles.n_mobile_particles = n_mobile_particles;
@@ -69,6 +69,7 @@ PCI_SPH::PCI_SPH(
     this->particles.n_total_particles = particles.n_liquid_particles   +
                                   particles.n_boundary_particles +
                                   particles.n_mobile_particles;
+    //std::cout<<"Allocating for n particles:"<<(this->particles.n_total_particles)<<std::endl;
 
     this->particles.allocateMemoryForNParticles(particles.n_total_particles);
 
@@ -79,7 +80,7 @@ PCI_SPH::PCI_SPH(
      */
 
     for( size_t i = this->particles.n_liquid_particles_start;
-         i < this->particles.n_liquid_particles;
+         i < this->particles.n_liquid_particles + this->particles.n_liquid_particles_start;
          i++ )
     {
         particles.x[i] = liquid_samples[i][0];
@@ -97,18 +98,20 @@ PCI_SPH::PCI_SPH(
      */
     float x_offset = .2f;
     float y_offset = 0.2f;
-    float z_offset = 1.f;
+    float z_offset = 0.f;
     for( size_t i = particles.n_mobile_particles_start;
                 i < particles.n_mobile_particles_start + particles.n_mobile_particles;
                 i++ )
     {
-        particles.x[i] = x_mob[i] + x_offset;
-        particles.y[i] = y_mob[i] + y_offset;
-        particles.z[i] = z_mob[i] + z_offset;
+        
+        particles.x[i] = x_mob[i-particles.n_mobile_particles_start] + x_offset;
+        particles.y[i] = y_mob[i-particles.n_mobile_particles_start] + y_offset;
+        particles.z[i] = z_mob[i-particles.n_mobile_particles_start] + z_offset;
+        //std::cout<<"i:"<<i<<" "<<particles.x[i]<<","<<particles.y[i]<<","<<particles.z[i]<<std::endl;
 
-        particles.x_star[i] = x_mob[i] + x_offset;
-        particles.y_star[i] = y_mob[i] + y_offset;
-        particles.z_star[i] = z_mob[i] + z_offset;
+        particles.x_star[i] = x_mob[i-particles.n_mobile_particles_start] + x_offset;
+        particles.y_star[i] = y_mob[i-particles.n_mobile_particles_start] + y_offset;
+        particles.z_star[i] = z_mob[i-particles.n_mobile_particles_start] + z_offset;
 
         particles.vx[i] = 0.f;
         particles.vy[i] = 0.f;
@@ -1044,11 +1047,12 @@ void PCI_SPH::generate_particle_cube(
     
     for (size_t i = 0; i < x_particles; i++)
         for (size_t j = 0; j < y_particles; j++){
-            float xval =i*h+xmin;
-            float yval =j*h+ymin;
+            float xval = i*h+xmin;
+            float yval = j*h+ymin;
             xv[i*y_particles + j] = xval;
             yv[i*y_particles + j] = yval;
             zv[i*y_particles + j] = zmin;
+            //std::cout<<"gen cube:"<<xval<<","<<yval<<","<<zmin<<std::endl;
 
 
 //            xv[x_particles*y_particles + i*x_particles + j] = i*h+xmin;

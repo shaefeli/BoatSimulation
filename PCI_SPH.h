@@ -10,6 +10,7 @@
 #include "Vector3T.h"
 #include "SupportingStructures.h"
 #include "OpenGL_Renderer.h"
+#include <memory>
 
 class PCI_SPH {
 
