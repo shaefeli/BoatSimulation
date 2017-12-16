@@ -16,11 +16,19 @@ PCI_SPH::PCI_SPH(
         bBox(bBox), iBox(iBox), simState(simState), uGridSplit(uGridSplit)
 {
     this->particles.mass = simState.mass;
-
+    
+    /*
     this->uniform_grid = std::make_shared<Uniform_Grid>(
             bBox.x1, bBox.y1, bBox.z1,
             bBox.x2, bBox.y2, bBox.z2,
             uGridSplit.cells_x,uGridSplit.cells_y,uGridSplit.cells_z);
+            */
+    //std::cerr<<"initializing uniform grid"<<std::endl;
+    this->uniform_grid = new Uniform_Grid(
+            bBox.x1, bBox.y1, bBox.z1,
+            bBox.x2, bBox.y2, bBox.z2,
+            uGridSplit.cells_x,uGridSplit.cells_y,uGridSplit.cells_z);
+    //std::cerr<<"end initializing uniform grid"<<std::endl;
 
 
     /**
@@ -96,9 +104,9 @@ PCI_SPH::PCI_SPH(
     /**
      *  Initialize the BOAT particles
      */
-    float x_offset = .2f;
+    float x_offset = 0.1f;
     float y_offset = 0.2f;
-    float z_offset = 0.f;
+    float z_offset = -0.8f;
     for( size_t i = particles.n_mobile_particles_start;
                 i < particles.n_mobile_particles_start + particles.n_mobile_particles;
                 i++ )
@@ -281,13 +289,29 @@ float PCI_SPH::evalC_spline(int &i, int &j, float &h) {
 }
 
 
+void PCI_SPH::move_solid_object( float x, float y, float z )
+{
+    for( size_t i = particles.n_liquid_particles + particles.n_boundary_particles;
+            i < particles.n_total_particles; i++ ) {
+        particles.x[i] += x;
+        particles.y[i] += y;
+        particles.z[i] += z;
+
+        mobile_mass_center_x += x;
+        mobile_mass_center_y += y;
+        mobile_mass_center_z += z;
+    }
+}
+
 
 void PCI_SPH::run_step() {
 
+    move_solid_object( 0., 0., 1*0.001);
 
-
+    //std::cerr<<"run_step:"<<std::endl;
     uniform_grid->build(particles.x, particles.y, particles.z,
                         particles.n_total_particles);
+    //std::cerr<<"built"<<std::endl;
 
 
 #if 1

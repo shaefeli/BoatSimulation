@@ -19,6 +19,10 @@ Uniform_Grid::Uniform_Grid(float min_x, float min_y, float min_z,
     n_cells_x = ceil((max_x-min_x)/cell_x);
     n_cells_y = ceil((max_y-min_y)/cell_y);
     n_cells_z = ceil((max_z-min_z)/cell_z);
+    std::cerr<<"constr max vals:"<<max_x<<","<<max_y<<","<<max_z<<std::endl;
+    std::cerr<<"constr min vals:"<<min_x<<","<<min_y<<","<<min_z<<std::endl;
+    std::cerr<<"constr cel vals:"<<cell_x<<","<<cell_y<<","<<cell_z<<std::endl;
+    std::cerr<<"constructor_cells:"<<n_cells_x<<","<<n_cells_y<<","<<n_cells_z<<std::endl;
     //Allow exceeding bounds through the positive side
     //Just in case the correspondence is wrong
     this->max_x = n_cells_x*cell_x+min_x;
@@ -46,10 +50,13 @@ Uniform_Grid::~Uniform_Grid()
 
 size_t Uniform_Grid::unroll_grid_position( size_t i, size_t j, size_t k )
 {
+    //std::cout<<"init?:"<<filled<<std::endl;
+    //std::cerr<<"ni:"<<n_cells_x<<" j:"<<n_cells_y<<" k:"<<n_cells_z<<std::endl;
+    //std::cerr<<"i:"<<i<<" j:"<<j<<" k:"<<k<<std::endl;
     //printf("cell sizes: %lu %lu %lu\n", n_cells_x, n_cells_y, n_cells_z);
-    assert( 0 <= i and i < n_cells_x );
-    assert( 0 <= j and j < n_cells_y );
-    assert( 0 <= k and k < n_cells_z );
+    assert( 0 <= i and i < this->n_cells_x );
+    assert( 0 <= j and j < this->n_cells_y );
+    assert( 0 <= k and k < this->n_cells_z );
     return n_cells_y*n_cells_z*i + n_cells_z*j + k;
 }
 
@@ -74,7 +81,10 @@ void Uniform_Grid::build(   const float *xs,
     size_t gi,gj,gk;
     for( size_t i = 0; i < n_particles; i++ ) {
         query_cell(xs[i],ys[i],zs[i],gi,gj,gk);
+        //std::cerr<<"c1"<<std::endl;;
+        //std::cerr<<"ni:"<<n_cells_x<<" j:"<<n_cells_y<<" k:"<<n_cells_z<<std::endl;
         particle_index[i].first  = unroll_grid_position(gi,gj,gk);
+        //std::cerr<<"c1e"<<std::endl;
         particle_index[i].second = i;
     }
     std::sort(particle_index.begin(),particle_index.end(),
@@ -166,7 +176,9 @@ void Uniform_Grid::query_neighbors(float x, float y, float z,
                     (tj >= 0 and tj < (n_cells_y)) and
                     (tk >= 0 and tk < (n_cells_z)) ) {
                     //std::cerr<<"neighbors:"<<ti<<" "<<tj<<" "<<tk<<std::endl;
+                    //std::cerr<<"c2"<<std::endl;
                     cells.push_back( unroll_grid_position(ti,tj,tk) );
+                    //std::cerr<<"c2e"<<std::endl;
                 }
             }
         }

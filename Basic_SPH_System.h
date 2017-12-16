@@ -75,7 +75,6 @@ public:
     float mobile_angle_phi;
     float mobile_angle_theta;
     float mobile_angle_psi;
-    //To add: mobile rotations
 
     //Neighbor-search-structure
     Uniform_Grid uniform_grid;

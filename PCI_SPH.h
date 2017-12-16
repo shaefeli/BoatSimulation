@@ -87,13 +87,25 @@ private:
 
 
 public:
+    float mobile_mass_center_x;
+    float mobile_mass_center_y;
+    float mobile_mass_center_z;
+    float mobile_scale;
+    float mobile_angle_phi;
+    float mobile_angle_theta;
+    float mobile_angle_psi;
+
+
+    void move_solid_object( float x, float y, float z );
+
     //TODO: remove this sht
     OpenGL_Renderer* debugRender;
     void debugDeltaValue();
     void precalculateDeltaValue();
 
     ParticlesSystemData             particles;
-    std::shared_ptr<Uniform_Grid>   uniform_grid;
+    //std::shared_ptr<Uniform_Grid>   uniform_grid;
+    Uniform_Grid  * uniform_grid;
 
     PCI_SPH( BoundaryBox bBox,
              ParticlesInitialSpawningBox iBox,

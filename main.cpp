@@ -171,7 +171,7 @@ void initRendererWithSimInfo(const PCI_SPH &pciSph, OpenGL_Renderer &renderer) {
 
     renderer.render_info.p = pciSph.particles.p;
 
-    renderer.set_grid( pciSph.uniform_grid.get() );
+    renderer.set_grid( pciSph.uniform_grid );
 }
 
 

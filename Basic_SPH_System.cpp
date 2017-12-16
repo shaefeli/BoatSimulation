@@ -592,8 +592,8 @@ size_t Basic_SPH_System::get_particle_number()
 void Basic_SPH_System::run_step(float dt)
 {
 
-    move_solid_object( 0., 0., 1*dt);
 
+    move_solid_object( 0., 0., 1*dt);
     //Update the neighbor information
     uniform_grid.build(particles.x,particles.y,particles.z,particles.n_total_particles);
     //uniform_grid.build(particles.x,particles.y,particles.z,particles.n_total_particles);
