@@ -65,8 +65,10 @@ PCI_SPH::PCI_SPH(
     size_t n_mobile_particles = 0;
 
     double scale = 0.1;
-    load_model_data(0.03, scale, x_mob, y_mob, z_mob, n_mobile_particles);
-    //this->generate_particle_cube(.2f, 0.02, x_mob, y_mob,z_mob,n_mobile_particles);
+    //load_model_data(0.03, scale, x_mob, y_mob, z_mob, n_mobile_particles);
+    this->generate_particle_cube(.2f, 0.03, x_mob, y_mob,z_mob,n_mobile_particles);
+    
+    
     int mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
     this->particles.n_mobile_particles_start = particles.n_boundary_particles_start + particles.n_boundary_particles;
     this->particles.n_mobile_particles = n_mobile_particles;

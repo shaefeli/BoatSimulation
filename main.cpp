@@ -43,7 +43,7 @@ int main(int argc, char** argv){
 
     ParticlesInitialSpawningBox iBox{
             .x1 = 0.0f,     .x2 = 0.24f,
-            .y1 = 0.05f,    .y2 = 0.8f,
+            .y1 = 0.05f,    .y2 = 0.9f,
             .z1 = 0.0f,     .z2 = 0.24f,
             .spawningRadius = simState.kernel_radius * 0.5f
     };
