@@ -66,7 +66,7 @@ PCI_SPH::PCI_SPH(
 
     double scale = 0.1;
     //load_model_data(0.03, scale, x_mob, y_mob, z_mob, n_mobile_particles);
-    this->generate_particle_cube(.2f, 0.03, x_mob, y_mob,z_mob,n_mobile_particles);
+    this->generate_particle_cube(.2f, 0.025, x_mob, y_mob,z_mob,n_mobile_particles);
     
     
     int mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
@@ -108,7 +108,7 @@ PCI_SPH::PCI_SPH(
      */
     float x_offset = 0.2f;
     float y_offset = 0.2f;
-    float z_offset = 0.5f;
+    float z_offset = 0.7f;
     for( size_t i = particles.n_mobile_particles_start;
                 i < particles.n_mobile_particles_start + particles.n_mobile_particles;
                 i++ )
@@ -131,11 +131,11 @@ PCI_SPH::PCI_SPH(
         particles.vy_star[i] = 0.f;
         particles.vz_star[i] = 0.f;
 
-        particles.p[i] = 0.f;
-        particles.p[i] = 0.f;
-        particles.p[i] = 0.f;
+        particles.p[i] = 0.0f;
+        particles.p[i] = 0.0f;
+        particles.p[i] = 0.0f;
 
-        particles.rho[i] = simState.rho0;
+        particles.rho[i] = simState.rho0/10;
     }
 
     /**
@@ -291,24 +291,44 @@ float PCI_SPH::evalC_spline(int &i, int &j, float &h) {
 }
 
 
-void PCI_SPH::move_solid_object( float x, float y, float z )
+void PCI_SPH::move_solid_object(float vx, float vy, float vz)
 {
-    for( size_t i = particles.n_liquid_particles + particles.n_boundary_particles;
-            i < particles.n_total_particles; i++ ) {
-        particles.x[i] += x;
-        particles.y[i] += y;
-        particles.z[i] += z;
+    for( size_t i = particles.n_mobile_particles_start;
+                i < particles.n_mobile_particles_start + particles.n_mobile_particles;
+                i++ ) {
+        particles.vx[i] = vx;
+        particles.vy[i] = vy;
+        particles.vz[i] = vz;
 
-        mobile_mass_center_x += x;
-        mobile_mass_center_y += y;
-        mobile_mass_center_z += z;
+        particles.vx_star[i] = vx;
+        particles.vy_star[i] = vy;
+        particles.vz_star[i] = vz;
+
+
+        float offset_x = simState.dt * vx;
+        float offset_y = simState.dt * vy;
+        float offset_z = simState.dt * vz;
+
+        particles.x[i] += offset_x;
+        particles.y[i] += offset_y;
+        particles.z[i] += offset_z;
+
+        particles.x_star[i] += offset_x;
+        particles.y_star[i] += offset_y;
+        particles.z_star[i] += offset_z;
+
+        mobile_mass_center_x += offset_x;
+        mobile_mass_center_y += offset_y;
+        mobile_mass_center_z += offset_z;
     }
 }
 
 
 void PCI_SPH::run_step() {
 
-    //move_solid_object( 0., 0., 1*0.002);
+    if (this->current_time > 0.1){
+        move_solid_object(0, 0, -.3f);
+    }
 
     //std::cerr<<"run_step:"<<std::endl;
     uniform_grid->build(particles.x, particles.y, particles.z,
@@ -430,7 +450,7 @@ void PCI_SPH::run_step() {
     float rho_err = 10.f;
     float max_rho = 0.f;
     int   corr_it = 0;
-    while (rho_err > 0.01 && corr_it < 10) {
+    while (rho_err > 0.05 && corr_it < 15) {
         corr_it++;
         // Compute rho_star and P
         for(int i = particles.n_liquid_particles_start; i < this->particles.n_liquid_particles; i++){

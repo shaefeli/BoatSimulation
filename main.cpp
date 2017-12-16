@@ -64,25 +64,30 @@ int main(int argc, char** argv){
     initRendererWithSimInfo(pciSph, renderer);
     renderer.init(argc,argv);
     pciSph.debugRender = &renderer;
-//    renderer.draw();
+
+    Maya_Interface maya(pciSph.particles.n_liquid_particles,endIt, startIt);
+
     unsigned int it=0;
     bool render = false;
 
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << pciSph.getCurrentTime() << "] sec\n";
+
         if(render and it >= startIt && it <= endIt){
-            //maya.writeToMaya(it,bsph.particles.x,
-            //                    bsph.particles.y,
-            //                    bsph.particles.z,
-            //                    bsph.particles.n_liquid_particles);
-            //maya.writeBoatInfos(bsph.mobile_mass_center_x,
-            //                    bsph.mobile_mass_center_y,
-            //                    bsph.mobile_mass_center_z,
-            //                    bsph.mobile_angle_phi,
-            //                    bsph.mobile_angle_theta,
-            //                    bsph.mobile_angle_psi,
-            //                    it);
-        } 
+            maya.writeToMaya(it,
+                             pciSph.particles.x,
+                             pciSph.particles.y,
+                             pciSph.particles.z,
+                             pciSph.particles.n_liquid_particles);
+            maya.writeBoatInfos(pciSph.mobile_mass_center_x,
+                                pciSph.mobile_mass_center_y,
+                                pciSph.mobile_mass_center_z,
+                                pciSph.mobile_angle_phi,
+                                pciSph.mobile_angle_theta,
+                                pciSph.mobile_angle_psi,
+                                it);
+        }
+
         pciSph.run_step();
         renderer.draw();
         ///std::this_thread::sleep_for(std::chrono::milliseconds(500));
