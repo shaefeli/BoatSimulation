@@ -68,7 +68,7 @@ int main(int argc, char** argv){
     Maya_Interface maya(pciSph.particles.n_liquid_particles,endIt, startIt);
 
     unsigned int it=0;
-    bool render = false;
+    bool render = true;
 
     while(!glfwWindowShouldClose(renderer.getWindow())){
         std::cout << "[" << pciSph.getCurrentTime() << "] sec\n";
@@ -90,6 +90,7 @@ int main(int argc, char** argv){
 
         pciSph.run_step();
         renderer.draw();
+        it++;
         ///std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
