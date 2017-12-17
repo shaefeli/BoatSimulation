@@ -242,31 +242,6 @@ PCI_SPH::PCI_SPH(
         particles.vz_star[particles.n_boundary_particles_start + b_samples_yz.size() + offset + i] = 0.0f; //(float(rand())/RAND_MAX);
     }
     
-        //particles.vx[i] = vx;
-        //particles.vy[i] = vy;
-        //particles.vz[i] = vz;
-
-        //particles.vx_star[i] = vx;
-        //particles.vy_star[i] = vy;
-        //particles.vz_star[i] = vz;
-
-
-        //float offset_x = simState.dt * vx;
-        //float offset_y = simState.dt * vy;
-        //float offset_z = simState.dt * vz;
-
-        //particles.x[i] += offset_x;
-        //particles.y[i] += offset_y;
-        //particles.z[i] += offset_z;
-
-        //particles.x_star[i] += offset_x;
-        //particles.y_star[i] += offset_y;
-        //particles.z_star[i] += offset_z;
-
-        //mobile_mass_center_x += offset_x;
-        //mobile_mass_center_y += offset_y;
-        //mobile_mass_center_z += offset_z;
-
     for (int i = 0; i < particles.n_boundary_particles; i++){
         particles.rho[particles.n_boundary_particles_start + i] = simState.rho0;
     }
@@ -278,7 +253,7 @@ PCI_SPH::PCI_SPH(
     /**
      *  Initialize the BOAT particles
      */
-
+    
     float x_offset = 0.2f;
     float y_offset = 0.2f;
     float z_offset = 0.7f;
@@ -288,6 +263,11 @@ PCI_SPH::PCI_SPH(
     mobile_mass_center_x = x_offset;
     mobile_mass_center_y = y_offset;
     mobile_mass_center_z = z_offset;
+
+    mobile_angle_phi    = 0.;
+    mobile_angle_theta  = 0.;
+    mobile_angle_psi    = 0.;
+
     for( size_t i = particles.n_mobile_particles_start;
                 i < particles.n_mobile_particles_start + particles.n_mobile_particles;
                 i++ )
@@ -488,12 +468,12 @@ void PCI_SPH::move_solid_object(float vx, float vy, float vz, float vphi, float 
     float spsi = sin(psi);
     float cpsi = cos(psi);
 
-    std::cout<<"sphi: "  << sphi <<std::endl;
-    std::cout<<"cphi: "  << cphi <<std::endl;
-    std::cout<<"stheta: "<< stheta <<std::endl;
-    std::cout<<"ctheta: "<< ctheta <<std::endl;
-    std::cout<<"spsi: "  << spsi <<std::endl;
-    std::cout<<"cpsi: "  << cpsi <<std::endl;
+    //std::cout<<"sphi: "  << sphi <<std::endl;
+    //std::cout<<"cphi: "  << cphi <<std::endl;
+    //std::cout<<"stheta: "<< stheta <<std::endl;
+    //std::cout<<"ctheta: "<< ctheta <<std::endl;
+    //std::cout<<"spsi: "  << spsi <<std::endl;
+    //std::cout<<"cpsi: "  << cpsi <<std::endl;
 
     float a11 = cpsi*cphi - ctheta*sphi*spsi;
     float a12 = cpsi*sphi + ctheta*cphi*spsi;
@@ -509,6 +489,7 @@ void PCI_SPH::move_solid_object(float vx, float vy, float vz, float vphi, float 
     
 
     //Apply rotation
+
 
     for( size_t i = particles.n_mobile_particles_start;
                 i < particles.n_mobile_particles_start + particles.n_mobile_particles;
@@ -526,6 +507,10 @@ void PCI_SPH::move_solid_object(float vx, float vy, float vz, float vphi, float 
         float offset_x = simState.dt * vx;
         float offset_y = simState.dt * vy;
         float offset_z = simState.dt * vz;
+
+        //std::cout<<"offset_x: "<<offset_x<<std::endl;
+        //std::cout<<"offset_y: "<<offset_y<<std::endl;
+        //std::cout<<"offset_z: "<<offset_z<<std::endl;
 
         particles.x[i] = new_x + offset_x + mobile_mass_center_x;
         particles.y[i] = new_y + offset_y + mobile_mass_center_y;
@@ -548,13 +533,17 @@ void PCI_SPH::move_solid_object(float vx, float vy, float vz, float vphi, float 
     mobile_mass_center_x += simState.dt * vx;
     mobile_mass_center_y += simState.dt * vy;
     mobile_mass_center_z += simState.dt * vz;
+
+    mobile_angle_phi    += phi;
+    mobile_angle_theta  += theta;
+    mobile_angle_psi    += psi;
 }
 
 
 void PCI_SPH::run_step() {
 
     if (this->current_time > 0.05){
-        move_solid_object(0, 0, 0, 0.0f, 4.0f, 0.0f);
+        move_solid_object(0, 0, -1.0, 0.0f, 4.0f, 0.0f);
     }
 
     //std::cerr<<"run_step:"<<std::endl;
