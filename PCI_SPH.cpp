@@ -69,7 +69,8 @@ PCI_SPH::PCI_SPH(
     std::cout<<b_min_x<<","<<b_min_y<<","<<b_min_z<<std::endl;
     std::cout<<b_max_x<<","<<b_max_y<<","<<b_max_z<<std::endl;
     float sampling_distance_boundary = 0.6;
-    float sampling_radius = 0.015;
+    //float sampling_radius = 0.015;//Not bad
+    float sampling_radius = 0.018;//Not bad
     //XY
     Vec<float,2> b_min_xy, b_max_xy;
     b_min_xy[0] = b_min_x;
@@ -497,7 +498,7 @@ void PCI_SPH::move_solid_object(float vx, float vy, float vz)
 void PCI_SPH::run_step() {
 
     if (this->current_time > 0.1){
-        move_solid_object(0, 0, -.3f);
+        move_solid_object(0, 0, -.1f);
     }
 
     //std::cerr<<"run_step:"<<std::endl;
