@@ -111,8 +111,8 @@ PCI_SPH::PCI_SPH(
     size_t n_mobile_particles = 0;
 
     double scale = 0.1;
-    //load_model_data(0.03, scale, x_mob, y_mob, z_mob, n_mobile_particles);
-    this->generate_particle_cube(.2f, 0.025, x_mob, y_mob,z_mob,n_mobile_particles);
+    load_model_data(0.05, scale, x_mob, y_mob, z_mob, n_mobile_particles);
+    //this->generate_particle_cube(.2f, 0.025, x_mob, y_mob,z_mob,n_mobile_particles);
     
     
     int mobile_offset = particles.n_liquid_particles + particles.n_boundary_particles;
@@ -244,6 +244,7 @@ PCI_SPH::PCI_SPH(
     
     for (int i = 0; i < particles.n_boundary_particles; i++){
         particles.rho[particles.n_boundary_particles_start + i] = simState.rho0;
+        particles.rho_star[particles.n_boundary_particles_start + i] = simState.rho0;
     }
 
 
@@ -295,6 +296,7 @@ PCI_SPH::PCI_SPH(
         particles.p[i] = 0.0f;
 
         particles.rho[i] = simState.rho0/10;
+        particles.rho_star[i] = simState.rho0/10;
     }
 
     /**
@@ -543,7 +545,7 @@ void PCI_SPH::move_solid_object(float vx, float vy, float vz, float vphi, float 
 void PCI_SPH::run_step() {
 
     if (this->current_time > 0.05){
-        move_solid_object(0, 0, -1.0, 0.0f, 4.0f, 0.0f);
+        //move_solid_object(0, 0, 0, 0.0f, 0.0f, 0.0f);
     }
 
     //std::cerr<<"run_step:"<<std::endl;
