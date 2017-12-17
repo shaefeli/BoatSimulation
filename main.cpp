@@ -1,4 +1,5 @@
 #include "OpenGL_Renderer.h"
+#include <omp.h>
 #include "Basic_SPH_System.h"
 #include "PCI_SPH.h"
 #include "SupportingStructures.h"
@@ -18,8 +19,8 @@ int main(int argc, char** argv){
 
     
     SimState simState;
-    int startIt = 300;
-    int endIt = 400;
+    int startIt = 0;
+    int endIt = 1000;
 //    simState.dt = 0.001;
     simState.g  = 9.8;
     simState.particle_radius = 0.02f ;
@@ -36,15 +37,15 @@ int main(int argc, char** argv){
 #if METHOD_PCI_SPH
 
     BoundaryBox bBox{
-            .x1 = 0.f,  .x2 = 0.3f,
+            .x1 = 0.f,  .x2 = 0.4f,
             .y1 = 0.f,  .y2 = 1.0f,
-            .z1 = 0.f,  .z2 = 1.f
+            .z1 = 0.f,  .z2 = 1.0f
     };
 
     ParticlesInitialSpawningBox iBox{
-            .x1 = 0.1f,     .x2 = 0.24f,
+            .x1 = 0.1f,     .x2 = 0.3f,
             .y1 = 0.1f,    .y2 = 0.9f,
-            .z1 = 0.1f,     .z2 = 0.34f,
+            .z1 = 0.1f,     .z2 = 0.5f,
             .spawningRadius = simState.kernel_radius * 0.5f
     };
     UniformGridSplit gridSplit{
@@ -52,6 +53,9 @@ int main(int argc, char** argv){
             .cells_y = simState.kernel_radius*1.0f,
             .cells_z = simState.kernel_radius*1.0f
     };
+
+    omp_set_num_threads(4);
+
 
     PCI_SPH pciSph(bBox,iBox,simState,gridSplit);
 
@@ -68,10 +72,32 @@ int main(int argc, char** argv){
     Maya_Interface maya(pciSph.particles.n_liquid_particles,endIt, startIt);
 
     unsigned int it=0;
+
     bool render = true;
+    
+    std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+    
+    double elapsed_time = 0;
+    size_t n_fps = 0;
+    double avg_fps = 0;
 
     while(!glfwWindowShouldClose(renderer.getWindow())){
-        std::cout << "[" << pciSph.getCurrentTime() << "] sec\n";
+        std::cout << "[Simulation time:" << pciSph.getCurrentTime() << "] sec\n";
+        std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+        std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+        std::cout << "[Frame time:" << time_span.count() << "] sec\n";
+        std::cout << "[FPS:" << avg_fps << "] sec\n";
+        std::cout << pciSph.mobile_mass_center_z << "\n";
+        elapsed_time += time_span.count();
+        n_fps++;
+        if( n_fps == 10 ) {
+            avg_fps = n_fps/elapsed_time;
+            //std::cout << "[FPS:" << n_fps/elapsed_time << "] sec\n";
+            n_fps = 0;
+            elapsed_time = 0;
+        }
+
+        t1 = std::chrono::steady_clock::now();
 
         if(render and it >= startIt && it <= endIt){
             maya.writeToMaya(it,

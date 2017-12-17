@@ -291,9 +291,9 @@ void load_model_data(   float h,
 //       }
 //   }
 
-   xv = interior_points_x;
-   yv = interior_points_y;
-   zv = interior_points_z;
+   xv = std::vector<float>(interior_points_x);
+   yv = std::vector<float>(interior_points_y);
+   zv = std::vector<float>(interior_points_z);
    n_particles = n_interior_points;
 //   n_particles = xv.size();
    std::cout<<std::endl;
