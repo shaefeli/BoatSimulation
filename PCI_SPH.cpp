@@ -278,9 +278,16 @@ PCI_SPH::PCI_SPH(
     /**
      *  Initialize the BOAT particles
      */
+
     float x_offset = 0.2f;
     float y_offset = 0.2f;
     float z_offset = 0.7f;
+    //float x_offset = 0.0f;
+    //float y_offset = 0.0f;
+    //float z_offset = 0.0f;
+    mobile_mass_center_x = x_offset;
+    mobile_mass_center_y = y_offset;
+    mobile_mass_center_z = z_offset;
     for( size_t i = particles.n_mobile_particles_start;
                 i < particles.n_mobile_particles_start + particles.n_mobile_particles;
                 i++ )
@@ -462,43 +469,92 @@ float PCI_SPH::evalC_spline(int &i, int &j, float &h) {
 }
 
 
-void PCI_SPH::move_solid_object(float vx, float vy, float vz)
+void PCI_SPH::move_solid_object(float vx, float vy, float vz, float vphi, float vtheta, float vpsi )
 {
+    float phi = vphi*simState.dt;
+    float theta = vtheta*simState.dt;
+    float psi = vpsi*simState.dt;
+
+    std::cout<<"angle changes:"<<std::endl;
+    std::cout<<"phi: "  << phi <<std::endl;
+    std::cout<<"theta: "<< theta <<std::endl;
+    std::cout<<"psi: "  << psi <<std::endl;
+
+
+    float sphi = sin(phi);
+    float cphi = cos(phi);
+    float stheta = sin(theta);
+    float ctheta = cos(theta);
+    float spsi = sin(psi);
+    float cpsi = cos(psi);
+
+    std::cout<<"sphi: "  << sphi <<std::endl;
+    std::cout<<"cphi: "  << cphi <<std::endl;
+    std::cout<<"stheta: "<< stheta <<std::endl;
+    std::cout<<"ctheta: "<< ctheta <<std::endl;
+    std::cout<<"spsi: "  << spsi <<std::endl;
+    std::cout<<"cpsi: "  << cpsi <<std::endl;
+
+    float a11 = cpsi*cphi - ctheta*sphi*spsi;
+    float a12 = cpsi*sphi + ctheta*cphi*spsi;
+    float a13 = spsi*stheta;
+
+    float a21 =-spsi*cphi - ctheta*sphi*cpsi;
+    float a22 =-spsi*sphi + ctheta*cphi*cpsi;
+    float a23 = cpsi*stheta;
+    
+    float a31 = stheta*sphi;
+    float a32 =-stheta*cphi;
+    float a33 = ctheta;
+    
+
+    //Apply rotation
+
     for( size_t i = particles.n_mobile_particles_start;
                 i < particles.n_mobile_particles_start + particles.n_mobile_particles;
                 i++ ) {
-        particles.vx[i] = vx;
-        particles.vy[i] = vy;
-        particles.vz[i] = vz;
 
-        particles.vx_star[i] = vx;
-        particles.vy_star[i] = vy;
-        particles.vz_star[i] = vz;
-
+        float old_x = particles.x[i] - mobile_mass_center_x;
+        float old_y = particles.y[i] - mobile_mass_center_y;
+        float old_z = particles.z[i] - mobile_mass_center_z;
+        
+        //Center back to origin->rotate->move back
+        float new_x = old_x*a11 + old_y*a12 + old_z*a13;
+        float new_y = old_x*a21 + old_y*a22 + old_z*a23;
+        float new_z = old_x*a31 + old_y*a32 + old_z*a33;
 
         float offset_x = simState.dt * vx;
         float offset_y = simState.dt * vy;
         float offset_z = simState.dt * vz;
 
-        particles.x[i] += offset_x;
-        particles.y[i] += offset_y;
-        particles.z[i] += offset_z;
+        particles.x[i] = new_x + offset_x + mobile_mass_center_x;
+        particles.y[i] = new_y + offset_y + mobile_mass_center_y;
+        particles.z[i] = new_z + offset_z + mobile_mass_center_z;
 
-        particles.x_star[i] += offset_x;
-        particles.y_star[i] += offset_y;
-        particles.z_star[i] += offset_z;
+        particles.x_star[i] =  new_x + offset_x + mobile_mass_center_x;
+        particles.y_star[i] =  new_y + offset_y + mobile_mass_center_y;
+        particles.z_star[i] =  new_z + offset_z + mobile_mass_center_z;
 
-        mobile_mass_center_x += offset_x;
-        mobile_mass_center_y += offset_y;
-        mobile_mass_center_z += offset_z;
+
+        particles.vx[i] = (new_x - old_x)/simState.dt;
+        particles.vy[i] = (new_y - old_y)/simState.dt;
+        particles.vz[i] = (new_z - old_z)/simState.dt;
+
+        particles.vx_star[i] = (new_x - old_x)/simState.dt;
+        particles.vy_star[i] = (new_y - old_y)/simState.dt;
+        particles.vz_star[i] = (new_z - old_z)/simState.dt;
+
     }
+    mobile_mass_center_x += simState.dt * vx;
+    mobile_mass_center_y += simState.dt * vy;
+    mobile_mass_center_z += simState.dt * vz;
 }
 
 
 void PCI_SPH::run_step() {
 
-    if (this->current_time > 0.1){
-        move_solid_object(0, 0, -.1f);
+    if (this->current_time > 0.05){
+        move_solid_object(0, 0, 0, 0.0f, 4.0f, 0.0f);
     }
 
     //std::cerr<<"run_step:"<<std::endl;
@@ -1277,7 +1333,7 @@ void PCI_SPH::generate_particle_cube(
             float yval = j*h+ymin;
             xv[i*y_particles + j] = xval;
             yv[i*y_particles + j] = yval;
-            zv[i*y_particles + j] = zmin;
+            zv[i*y_particles + j] = 0.;
             //std::cout<<"gen cube:"<<xval<<","<<yval<<","<<zmin<<std::endl;
 
 

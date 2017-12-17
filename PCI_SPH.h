@@ -96,7 +96,7 @@ public:
     float mobile_angle_psi;
 
 
-    void move_solid_object(float vx, float vy, float vz);
+    void move_solid_object(float vx, float vy, float vz, float vphi, float vtheta, float vpsi);
 
     //TODO: remove this sht
     OpenGL_Renderer* debugRender;
