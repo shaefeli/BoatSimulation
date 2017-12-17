@@ -45,7 +45,7 @@ int main(int argc, char** argv){
     ParticlesInitialSpawningBox iBox{
             .x1 = 0.1f,     .x2 = 0.3f,
             .y1 = 0.1f,    .y2 = 0.95f,
-            .z1 = 0.1f,     .z2 = 0.4f,
+            .z1 = 0.1f,     .z2 = 0.5f,
             .spawningRadius = simState.kernel_radius * 0.5f
     };
     UniformGridSplit gridSplit{
