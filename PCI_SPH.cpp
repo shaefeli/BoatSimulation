@@ -111,7 +111,7 @@ PCI_SPH::PCI_SPH(
     size_t n_mobile_particles = 0;
 
     double scale = 0.1;
-    load_model_data(0.05, scale, x_mob, y_mob, z_mob, n_mobile_particles);
+    load_model_data(0.025, scale, x_mob, y_mob, z_mob, n_mobile_particles);
     //this->generate_particle_cube(.2f, 0.025, x_mob, y_mob,z_mob,n_mobile_particles);
     
     
@@ -291,12 +291,22 @@ PCI_SPH::PCI_SPH(
         particles.vy_star[i] = 0.f;
         particles.vz_star[i] = 0.f;
 
-        particles.p[i] = 0.0f;
-        particles.p[i] = 0.0f;
+        particles.Fx[i] = 0.f;
+        particles.Fy[i] = 0.f;
+        particles.Fz[i] = 0.f;
+
+        particles.Fx_p[i] = 0.f;
+        particles.Fy_p[i] = 0.f;
+        particles.Fz_p[i] = 0.f;
+
+        particles.nx[i] = 0.f;
+        particles.ny[i] = 0.f;
+        particles.nz[i] = 0.f;
+
         particles.p[i] = 0.0f;
 
-        particles.rho[i] = simState.rho0/10;
-        particles.rho_star[i] = simState.rho0/10;
+        particles.rho[i] = simState.rho0;// /10
+        particles.rho_star[i] = simState.rho0;// /10
     }
 
     /**
@@ -457,10 +467,10 @@ void PCI_SPH::move_solid_object(float vx, float vy, float vz, float vphi, float 
     float theta = vtheta*simState.dt;
     float psi = vpsi*simState.dt;
 
-    std::cout<<"angle changes:"<<std::endl;
-    std::cout<<"phi: "  << phi <<std::endl;
-    std::cout<<"theta: "<< theta <<std::endl;
-    std::cout<<"psi: "  << psi <<std::endl;
+    //std::cout<<"angle changes:"<<std::endl;
+    //std::cout<<"phi: "  << phi <<std::endl;
+    //std::cout<<"theta: "<< theta <<std::endl;
+    //std::cout<<"psi: "  << psi <<std::endl;
 
 
     float sphi = sin(phi);
@@ -544,8 +554,24 @@ void PCI_SPH::move_solid_object(float vx, float vy, float vz, float vphi, float 
 
 void PCI_SPH::run_step() {
 
+    std::cout<<"Static information: "<<std::endl;
+    std::cout<<"liquid parts: "<<particles.n_liquid_particles<<std::endl;
+    std::cout<<"liquid parts start: "<<particles.n_liquid_particles_start<<std::endl;
+    std::cout<<"bounda parts: "<<particles.n_boundary_particles<<std::endl;
+    std::cout<<"bounda parts start: "<<particles.n_boundary_particles_start<<std::endl;
+    std::cout<<"mobile parts: "<<particles.n_mobile_particles<<std::endl;
+    std::cout<<"mobile parts:"<<particles.n_mobile_particles_start<<std::endl;
+    std::cout<<"total parts: "<<particles.n_total_particles<<std::endl;
+
     if (this->current_time > 0.05){
         //move_solid_object(0, 0, 0, 0.0f, 0.0f, 0.0f);
+    }
+    for(int i = particles.n_liquid_particles_start; i < this->particles.n_liquid_particles; i++){
+        std::cout<<"liquid coords:"<<particles.x[i]<<","<<particles.y[i]<<","<<particles.z[i]<<std::endl;
+        std::cout<<"liquid cstar:"<<particles.x_star[i]<<","<<particles.y_star[i]<<","<<particles.z_star[i]<<std::endl;
+        std::cout<<"liquid speed:"<<particles.vx[i]<<","<<particles.vy[i]<<","<<particles.vz[i]<<std::endl;
+        std::cout<<"liquid star:"<<particles.vx_star[i]<<","<<particles.vy_star[i]<<","<<particles.vz_star[i]<<std::endl;
+        std::cout<<"liquid press:"<<particles.p[i]<<std::endl;
     }
 
     //std::cerr<<"run_step:"<<std::endl;
