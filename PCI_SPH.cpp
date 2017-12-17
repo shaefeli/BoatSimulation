@@ -69,7 +69,7 @@ PCI_SPH::PCI_SPH(
     std::cout<<b_min_x<<","<<b_min_y<<","<<b_min_z<<std::endl;
     std::cout<<b_max_x<<","<<b_max_y<<","<<b_max_z<<std::endl;
     float sampling_distance_boundary = 0.6;
-    float sampling_radius = 0.02;
+    float sampling_radius = 0.015;
     //XY
     Vec<float,2> b_min_xy, b_max_xy;
     b_min_xy[0] = b_min_x;
@@ -507,10 +507,11 @@ void PCI_SPH::run_step() {
 
 
 #if 1
-    std::vector<size_t> near_cells;
     // Calculate RHO using position and velocity on step T
+    #pragma omp parallel for
     for(int i = particles.n_liquid_particles_start; i < this->particles.n_liquid_particles; i++){
-        near_cells.clear();
+        std::vector<size_t> near_cells;
+        //near_cells.clear();
         this->uniform_grid->query_neighbors(
                 this->particles.x[i],
                 this->particles.y[i],
@@ -536,6 +537,7 @@ void PCI_SPH::run_step() {
     }
 
     // F_visc and F_ext calculation and advections using RHO from step T
+    #pragma omp parallel for
     for(int i = particles.n_liquid_particles_start; i < this->particles.n_liquid_particles; i++){
 
         // Force acting on the particle
@@ -544,7 +546,8 @@ void PCI_SPH::run_step() {
         this->particles.Fz[i] = 0.f;
 
         // find neighbours
-        near_cells.clear();
+        //near_cells.clear();
+        std::vector<size_t> near_cells;
         this->uniform_grid->query_neighbors(
                 this->particles.x[i],
                 this->particles.y[i],
@@ -617,15 +620,17 @@ void PCI_SPH::run_step() {
         //else if (   particles.z_star[i] >= bBox.z2)  { particles.z_star[i] = bBox.z2; particles.vz_star[i] *= -0.5f; }
     }
 
-    // Start to iterate with pressure to minimise error of RHO --> should be close to RHO_0 = reference density
+    // Start to iterate with pressure to minimise error of RaHO --> should be close to RHO_0 = reference density
     float rho_err = 10.f;
     float max_rho = 0.f;
     int   corr_it = 0;
     while (rho_err > 0.05 && corr_it < 15) {
         corr_it++;
         // Compute rho_star and P
+        #pragma omp parallel for
         for(int i = particles.n_liquid_particles_start; i < this->particles.n_liquid_particles; i++){
-            near_cells.clear();
+            //near_cells.clear();
+            std::vector<size_t> near_cells;
             this->uniform_grid->query_neighbors(
                     this->particles.x_star[i],
                     this->particles.y_star[i],
@@ -663,8 +668,10 @@ void PCI_SPH::run_step() {
 
 
         // Compute Pressure Force
+        #pragma omp parallel for
         for(int i = particles.n_liquid_particles_start; i < this->particles.n_liquid_particles; i++){
-            near_cells.clear();
+            //near_cells.clear();
+            std::vector<size_t> near_cells;
             this->uniform_grid->query_neighbors(
                     this->particles.x_star[i],
                     this->particles.y_star[i],
@@ -723,6 +730,7 @@ void PCI_SPH::run_step() {
     }
     printf("\t\t RHO_ERR = %f   max_rho = %f\n",rho_err,max_rho);
 
+    #pragma omp parallel for
     for(int i = particles.n_liquid_particles_start; i < this->particles.n_liquid_particles; i++){
         particles.vx[i] = particles.vx_star[i];
         particles.vy[i] = particles.vy_star[i];

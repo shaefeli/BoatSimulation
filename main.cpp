@@ -1,4 +1,5 @@
 #include "OpenGL_Renderer.h"
+#include <omp.h>
 #include "Basic_SPH_System.h"
 #include "PCI_SPH.h"
 #include "SupportingStructures.h"
@@ -36,15 +37,15 @@ int main(int argc, char** argv){
 #if METHOD_PCI_SPH
 
     BoundaryBox bBox{
-            .x1 = 0.f,  .x2 = 0.3f,
+            .x1 = 0.f,  .x2 = 1.0f,
             .y1 = 0.f,  .y2 = 1.0f,
             .z1 = 0.f,  .z2 = 1.f
     };
 
     ParticlesInitialSpawningBox iBox{
-            .x1 = 0.1f,     .x2 = 0.24f,
-            .y1 = 0.1f,    .y2 = 0.9f,
-            .z1 = 0.1f,     .z2 = 0.34f,
+            .x1 = 0.1f,     .x2 = 0.9f,
+            .y1 = 0.1f,    .y2 = 0.5f,
+            .z1 = 0.1f,     .z2 = 0.9f,
             .spawningRadius = simState.kernel_radius * 0.5f
     };
     UniformGridSplit gridSplit{
@@ -52,6 +53,9 @@ int main(int argc, char** argv){
             .cells_y = simState.kernel_radius*1.0f,
             .cells_z = simState.kernel_radius*1.0f
     };
+
+    omp_set_num_threads(4);
+
 
     PCI_SPH pciSph(bBox,iBox,simState,gridSplit);
 
